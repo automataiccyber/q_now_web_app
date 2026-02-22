@@ -145,6 +145,9 @@
 
     <button class="btn" onclick="loginUser()">Login</button>
     <button class="btn" onclick="registerUser()" style="display:none;" id="signupBtn">Sign Up</button>
+    <label class="show-password">
+      <input type="checkbox" id="rememberMe"> Remember me
+    </label>
 
     <div id="errorMsg"></div>
 
@@ -162,7 +165,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
@@ -192,6 +195,8 @@
       }
 
       try {
+        const remember = document.getElementById("rememberMe").checked;
+        await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         alert("✅ Logged in as: " + userCredential.user.email);
         setTimeout(() => window.location.href = "Q-Now.html", 500);
@@ -254,6 +259,11 @@
 
     // Autofocus email field on load
     document.getElementById("email").focus();
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        window.location.href = "Q-Now.html";
+      }
+    });
   </script>
 </body>
 </html>
