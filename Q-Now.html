@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Q-now Admin Dashboard</title>
+
+  <style>
+    /* --- Color and UI variables --- */
+    :root {
+      --primary: #0077cc;
+      --primary-dark: #005fa3;
+      --accent: #00aaff;
+      --light-bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --text: #333;
+      --text-light: #555;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      --radius: 10px;
+      --transition: all 0.25s ease;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--text);
+      animation: fadeInBody 0.8s ease;
+      padding-top: 65px;
+    }
+
+    /* --- Header and navigation --- */
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      animation: slideDown 0.6s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    header h2 { 
+      margin: 0; 
+      font-size: 1.3rem; 
+      letter-spacing: 0.5px;
+      flex: 0 0 auto;
+    }
+
+    nav {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+      align-items: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      position: relative;
+      transition: var(--transition);
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    nav a:hover { color: var(--accent); transform: translateY(-2px); }
+    /* Notifications */
+    .notif-container{ position:relative; margin-left:6px; }
+    .notif-bell{ cursor:pointer; position:relative; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:500; }
+    .notif-badge{ position:absolute; top:-6px; right:-8px; background:#ff3b30; color:#fff; border-radius:10px; padding:0 6px; font-size:0.7rem; display:none; }
+    .notif-panel{ position:absolute; right:0; top:28px; width:320px; max-height:360px; overflow:auto; background:#fff; color:#333; border:1px solid #ddd; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.15); display:none; z-index:1200; }
+    .notif-item{ padding:10px 12px; border-bottom:1px solid #eee; cursor:pointer; transition:background 0.2s, opacity 0.2s; }
+    .notif-item.unread{ background:#f5faff; }
+    .notif-item.read{ opacity:0.75; }
+    .notif-item.new-open{ background:#e6f0ff; }
+    .notif-item:last-child{ border-bottom:none; }
+    .notif-title{ font-weight:600; font-size:0.9rem; }
+    .notif-meta{ font-size:0.8rem; color:#666; }
+
+    /* --- Main container for content --- */
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 25px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(15px);
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    /* Hero section */
+    .hero { text-align: center; margin-bottom: 2rem; }
+    .hero h2 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .hero p { font-size: 1.1rem; color: var(--text-light); }
+
+    /* Card layout for features */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      text-align: center;
+      transition: var(--transition);
+      opacity: 0;
+      transform: translateY(15px);
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    .card:nth-child(1) { animation-delay: 0.1s; }
+    .card:nth-child(2) { animation-delay: 0.2s; }
+    .card:nth-child(3) { animation-delay: 0.3s; }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .card h3 { color: var(--primary-dark); margin-bottom: 0.5rem; }
+    .card p { color: var(--text-light); margin-bottom: 1rem; }
+
+    .btn {
+      display: inline-block;
+      padding: 10px 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0, 119, 204, 0.3);
+    }
+
+    /* --- Establishment cards --- */
+    #establishmentsList {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1rem;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    .establishment-card {
+      background: #ffffff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      text-align: center;
+      transition: var(--transition);
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeUp 0.8s ease forwards;
+      position: relative;
+    }
+
+    .establishment-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .establishment-card a {
+      display: inline-block;
+      padding: 8px 16px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    .establishment-card a:hover { background: var(--primary-dark); }
+
+    /* Menu button styles */
+    .menu-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-light);
+      transition: var(--transition);
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .menu-btn:hover { color: var(--primary); }
+
+    .menu-options {
+      display: none;
+      position: absolute;
+      top: 35px;
+      right: 10px;
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 100;
+      min-width: 180px;
+      overflow: hidden;
+    }
+
+    .menu-options.active { display: block; animation: fadeIn 0.2s ease; }
+
+    .menu-options button {
+      display: block;
+      width: 100%;
+      padding: 10px 15px;
+      border: none;
+      background: white;
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+
+    .menu-options button:hover { background: #f0f7ff; color: var(--primary); }
+
+    .menu-options button:first-child { border-bottom: 1px solid #eee; }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+      background: #eef3f8;
+      color: #666;
+      font-size: 0.9rem;
+      animation: fadeInBody 1.2s ease;
+    }
+
+    /* Dropdown menu for user account */
+    .dropdown { position: relative; display: inline-block; }
+    .dropdown-toggle { cursor: pointer; background: transparent; color: white; border: none; font-weight: 500; transition: var(--transition); }
+    .dropdown-toggle:hover { color: var(--accent); transform: translateY(-1px); }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: white;
+      min-width: 150px;
+      box-shadow: var(--shadow);
+      border-radius: var(--radius);
+      overflow: hidden;
+      z-index: 1000;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+
+    .dropdown-menu a {
+      display: block;
+      padding: 10px;
+      color: #333;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+
+    .dropdown-menu a:hover { background: #f0f7ff; color: var(--primary-dark); }
+
+    /* --- Animations --- */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeInBody { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideDown { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  </style>
+</head>
+<body>
+  <!-- Header and navigation -->
+  <header>
+    <h2>Q-now Admin</h2>
+    <nav>
+      <a href="Live_Queue.html">Live Queue</a>
+      <a href="Appointments.html">Appointments</a>
+      <a href="Analytics.html">Analytics</a>
+      <a href="Search.html">Search Database</a>
+      <div class="notif-container" id="notifContainer">
+        <span class="notif-bell" id="notifBell" title="Notifications">🔔
+          <span class="notif-badge" id="notifBadge">0</span>
+        </span>
+        <div class="notif-panel" id="notifPanel">
+          <div class="notif-item"><span class="notif-meta">No notifications yet</span></div>
+        </div>
+      </div>
+      <!-- User dropdown menu -->
+      <div class="dropdown">
+        <a id="authLink" class="dropdown-toggle" href="Login.html">Login / Signup</a>
+        <div class="dropdown-menu" id="dropdownMenu">
+          <a href="#" id="logoutButton">Log Out</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main dashboard container -->
+  <div class="container">
+    <!-- Hero section -->
+    <section class="hero">
+      <h2>Welcome to Q-now Admin Dashboard</h2>
+      <p>Manage queues, appointments, and analytics for your healthcare facility with ease.</p>
+    </section>
+
+    <!-- Establishments section -->
+    <h2>Your Establishments</h2>
+    <div id="establishmentsList"><em>Loading...</em></div>
+    <div style="text-align:center;">
+      <a href="New_Establishment.html" class="btn">+ New Establishment</a>
+    </div>
+  </div>
+
+  <!-- Features overview -->
+  <div class="container">
+    <h2>Key Features</h2>
+    <ul>
+      <li>📊 Real-time queue tracking</li>
+      <li>⚡ Smart appointment scheduling</li>
+      <li>🏥 Multi-department and counter management</li>
+      <li>📈 Analytics on wait times and service efficiency</li>
+    </ul>
+
+    <section class="cards">
+      <div class="card">
+        <h3>Live Queue Status</h3>
+        <p>Track real-time queue updates across departments and counters.</p>
+        <a href="Live_Queue.html" class="btn">View Queues</a>
+      </div>
+      <div class="card">
+        <h3>Establishment Management</h3>
+        <p>Add new facilities, set up services, and configure counters.</p>
+        <a href="New_Establishment.html" class="btn">New Establishment</a>
+      </div>
+      <div class="card">
+        <h3>Analytics Overview</h3>
+        <p>View average wait times, peak hours, and feedback trends.</p>
+        <a href="Analytics.html" class="btn">View Analytics</a>
+      </div>
+      <div class="card">
+        <h3>Database Searching</h3>
+        <p>Efficiently search and retrieve patient records and data.</p>
+        <a href="Search.html" class="btn">Search Database</a>
+      </div>
+    </section>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 Q-now. All rights reserved.</p>
+  </footer>
+
+  <script type="module">
+    // --- Firebase imports ---
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getDatabase, ref, query, orderByChild, equalTo, onValue, set } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+    // --- Firebase config ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+      authDomain: "q-now-7d98a.firebaseapp.com",
+      databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "q-now-7d98a",
+      storageBucket: "q-now-7d98a.firebasestorage.app",
+      messagingSenderId: "72096271594",
+      appId: "1:72096271594:web:b86777a11af444aac49b93"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    // Notifications
+    const notifBell = document.getElementById("notifBell");
+    const notifPanel = document.getElementById("notifPanel");
+    const notifBadge = document.getElementById("notifBadge");
+    let notifications = [];
+    const READ_STORAGE_KEY = "qnow_notif_read";
+    let readKeys = {};
+    try{ readKeys = JSON.parse(localStorage.getItem(READ_STORAGE_KEY)||"{}"); }catch(_){ readKeys={}; }
+    const seen = { resched:new Set(), cancel:new Set(), queue:new Set(), arrival:new Set(), due:new Set() };
+    const estNameCache = {}; const patientNameCache = {};
+      notifBell?.addEventListener("click", (e)=>{
+        e.stopPropagation();
+        const opening = !(notifPanel.style.display==="block");
+        notifPanel.style.display = opening ? "block" : "none";
+        if (opening) {
+          window.__justReadKeys = new Set();
+          notifications.forEach(n=>{ const k=(n && n.key) ? [n.type||"",n.estId||"",n.counterId||"",n.key].join("|") : [n.type||"",n.estId||"",n.counterId||"",n.title||"",n.meta||""].join("|"); if(!readKeys[k]) __justReadKeys.add(k); readKeys[k]=true; n.read=true; });
+          localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys));
+          updateNotifUI();
+        }
+      });
+      document.addEventListener("click", ()=>{ if(notifPanel){ notifPanel.style.display="none"; window.__justReadKeys = new Set(); updateNotifUI(); } });
+    document.addEventListener("click", ()=>{ if(notifPanel) notifPanel.style.display="none"; });
+
+    function resolveEstName(estId, cb){
+      if(estNameCache[estId]) return cb(estNameCache[estId]);
+      onValue(ref(db,`establishments/${estId}/companyName`),(s)=>{ if(s.exists()){ estNameCache[estId]=s.val(); cb(s.val()); } else { onValue(ref(db,`establishments/${estId}/name`),(s2)=>{ const nm=s2.exists()?s2.val():"Establishment"; estNameCache[estId]=nm; cb(nm); },{onlyOnce:true}); } },{onlyOnce:true});
+    }
+    function resolvePatientName(uid, cb){
+      if(patientNameCache[uid]) return cb(patientNameCache[uid]);
+      onValue(ref(db,`patients/${uid}/name`),(s)=>{ const nm=s.exists()?s.val():"Patient"; patientNameCache[uid]=nm; cb(nm); },{onlyOnce:true});
+    }
+    function updateNotifUI(){
+      if(!notifPanel||!notifBadge) return;
+      notifications.forEach(n=>{ const k=[n.type||"",n.estId||"",n.counterId||"",n.msg||"",n.ts||""].join("|"); if(readKeys[k]) n.read=true; });
+      function notifKey(n){ if(n && n.key) return [n.type||"",n.estId||"",n.counterId||"",n.key].join("|"); return [n.type||"",n.estId||"",n.counterId||"",n.title||"",n.meta||""].join("|"); }
+      const sorted = notifications.slice().sort((a,b)=>(b.ts||0)-(a.ts||0));
+      const list=sorted.slice(0,50);
+      notifPanel.innerHTML = list.length ? list.map((n,i)=>{ const k=notifKey(n); const cls = n.read ? (window.__justReadKeys && __justReadKeys.has && __justReadKeys.has(k) ? "new-open" : "read") : "unread"; return `<div class="notif-item ${cls}" data-idx="${i}" data-type="${n.type||''}" data-est="${n.estId||''}" data-counter="${n.counterId||''}"><div class="notif-title">${n.title}</div><div class="notif-meta">${n.meta}</div><div>${n.msg}</div></div>`; }).join("") : `<div class="notif-item"><span class="notif-meta">No notifications</span></div>`;
+      const unread = notifications.filter(n=>!n.read).length;
+      notifBadge.textContent=String(unread);
+      notifBadge.style.display = unread ? "inline-block" : "none";
+      notifPanel.querySelectorAll(".notif-item[data-idx]").forEach(el=>{
+        el.addEventListener("click", ()=>{
+          const idx = Number(el.getAttribute("data-idx"));
+          const itm = notifications[idx];
+          if(itm){ const k=[itm.type||"",itm.estId||"",itm.counterId||"",itm.msg||"",itm.ts||""].join("|"); readKeys[k]=true; localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys)); itm.read=true; updateNotifUI(); }
+          const t = el.getAttribute("data-type")||"";
+          const estId = el.getAttribute("data-est")||"";
+          const counterId = el.getAttribute("data-counter")||"";
+          if(t==="queue"||t==="arrival"){
+            if(estId&&counterId) window.location.href=`Counter.html?estId=${encodeURIComponent(estId)}&counterId=${encodeURIComponent(counterId)}`;
+            else window.location.href = "Live_Queue.html";
+          } else {
+            window.location.href = "Appointments.html";
+          }
+        });
+      });
+    }
+    function startNotifForEst(estId){
+      onValue(ref(db,`establishments/${estId}/rescheduleRequests`),(snap)=>{
+        snap.forEach((rs)=>{
+          const v=rs.val(); const key=`${estId}|resched|${rs.key}`;
+          if(v && v.status==="pending" && !seen.resched.has(key)){
+            seen.resched.add(key);
+            const item={type:"reschedule", estId, title:"Appointment Reschedule", meta:"Loading...", msg:"Reschedule requested", ts:Date.now()};
+            notifications.unshift(item);
+            resolveEstName(estId, n=>{ item.meta=n; updateNotifUI(); });
+            onValue(ref(db,`establishments/${estId}/appointments/${rs.key}`),(aSnap)=>{ if(aSnap.exists()){ const a=aSnap.val(); const pid=a?.patientId; const pn=a?.patientName; if(pn){ item.msg=`Reschedule requested by ${pn}`; updateNotifUI(); } else if(pid){ resolvePatientName(pid,n=>{ item.msg=`Reschedule requested by ${n}`; updateNotifUI(); }); } } },{onlyOnce:true});
+          }
+        }); updateNotifUI();
+      });
+      onValue(ref(db,`establishments/${estId}/appointments`),(snap)=>{
+        snap.forEach((as)=>{ const a=as.val(); if(a && a.status==="cancelled" && a.cancelledAt){ const key=`${estId}|cancel|${as.key}`; if(!seen.cancel.has(key)){ seen.cancel.add(key); const item={type:"cancel", estId, title:"Appointment Cancelled", meta:`${a.patientName||"Patient"}`, msg:`${a.service||"-"}`, ts:a.cancelledAt}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=`${a.patientName||"Patient"} — ${n}`; updateNotifUI(); }); } } }); updateNotifUI();
+      });
+      onValue(ref(db,`establishments/${estId}/counters`),(snap)=>{
+        snap.forEach((cSnap)=>{ const counterId=cSnap.key; const counterName=(cSnap.val()&&cSnap.val().name)||counterId; const reqSnap=cSnap.child("requests"); if(!reqSnap.exists()) return; reqSnap.forEach((r)=>{ const req=r.val(); if(req && req.status==="pending"){ const key=`${estId}|queue|${counterId}|${r.key}`; if(!seen.queue.has(key)){ seen.queue.add(key); const pname=req.patientName||"Unknown"; const item={type:"queue", estId, counterId, title:"Queue Request", meta:`${counterName}`, msg:`From ${pname}`, ts:req.createdAt||Date.now()}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=`${n} — ${counterName}`; updateNotifUI(); }); } } }); }); updateNotifUI();
+      });
+      onValue(ref(db,`establishments/${estId}/arrivals`),(snap)=>{
+        snap.forEach((a)=>{ const v=a.val(); const key=`${estId}|arrival|${a.key}`; if(v && !seen.arrival.has(key)){ seen.arrival.add(key); const item={type:"arrival", estId, title:"Patient Arrived", meta:"Loading...", msg:"Arrival verified", ts:v.timestamp||Date.now()}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=n; updateNotifUI(); }); if(v.uid){ resolvePatientName(v.uid, n=>{ item.msg=`${n} has arrived`; updateNotifUI(); }); } } }); updateNotifUI();
+      });
+    }
+
+    const authLink = document.getElementById("authLink");
+    const establishmentsList = document.getElementById("establishmentsList");
+
+    // --- Monitor authentication state ---
+    onAuthStateChanged(auth, (user) => {
+      const dropdownMenu = document.getElementById("dropdownMenu");
+      const logoutButton = document.getElementById("logoutButton");
+
+      if (user) {
+        // Display user email
+        authLink.textContent = user.email;
+
+        // Toggle dropdown menu
+        authLink.onclick = (e) => {
+          e.preventDefault();
+          dropdownMenu.style.display =
+            dropdownMenu.style.display === "block" ? "none" : "block";
+        };
+
+        // Logout button functionality
+        logoutButton.onclick = (e) => {
+          e.preventDefault();
+          signOut(auth).then(() => {
+            location.replace("Login.html");
+          });
+        };
+
+        // --- Fetch establishments owned by this user ---
+        const estRef = query(ref(db, "establishments"), orderByChild("ownerId"), equalTo(user.uid));
+        onValue(estRef, (snapshot) => {
+          establishmentsList.innerHTML = "";
+          // Start notifications for owned establishments
+          notifications = [];
+          if (snapshot.exists()) { snapshot.forEach((child)=>{ startNotifForEst(child.key); }); }
+          if (!snapshot.exists()) {
+            establishmentsList.innerHTML = "<p><em>No establishments yet.</em></p>";
+            return;
+          }
+
+          snapshot.forEach((child) => {
+            const est = child.val();
+            const estKey = child.key;
+
+            // Create establishment card dynamically
+            const card = document.createElement("div");
+            card.className = "establishment-card";
+            card.innerHTML = `
+              <button class="menu-btn" title="More options">⋮</button>
+              <div class="menu-options">
+                <button class="edit-btn" data-est-id="${estKey}"> Edit Establishment</button>
+                <button class="delete-btn" data-est-id="${estKey}"> Delete Establishment</button>
+              </div>
+              <h3>${est.companyName || "Unnamed"}</h3>
+              <p>${est.address || "No address available"}</p>
+              <a href="Establishment.html?id=${estKey}">Open Dashboard</a>
+            `;
+            establishmentsList.appendChild(card);
+
+            // Menu button toggle
+            const menuBtn = card.querySelector(".menu-btn");
+            const menuOptions = card.querySelector(".menu-options");
+
+            menuBtn.addEventListener("click", (e) => {
+              e.stopPropagation();
+              menuOptions.classList.toggle("active");
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener("click", () => {
+              menuOptions.classList.remove("active");
+            });
+
+            // Edit button
+            card.querySelector(".edit-btn").addEventListener("click", () => {
+              window.location.href = `Edit_Establishment.html?id=${estKey}`;
+            });
+
+            // Delete button
+            card.querySelector(".delete-btn").addEventListener("click", async () => {
+              if (confirm("Are you sure you want to delete this establishment? Visit logs will be preserved.")) {
+                try {
+                  const estToDelete = ref(db, `establishments/${estKey}`);
+                  await set(estToDelete, null);
+                  alert("✅ Establishment deleted successfully!");
+                  card.remove();
+                } catch (error) {
+                  alert("❌ Error deleting establishment: " + error.message);
+                }
+              }
+            });
+          });
+        });
+      } else {
+        // User not logged in
+        authLink.textContent = "Login / Signup";
+        authLink.href = "Login.html";
+        authLink.onclick = null;
+        dropdownMenu.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

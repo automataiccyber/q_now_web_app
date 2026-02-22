@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Q-now | Edit Establishment</title>
+
+  <style>
+    /* =========================
+       Theme Variables
+       ========================= */
+    :root {
+      --primary: #0077cc;
+      --primary-dark: #005fa3;
+      --accent: #00aaff;
+      --light-bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --radius: 10px;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      --text: #333;
+      --text-light: #555;
+    }
+
+    /* =========================
+       Global Styles
+       ========================= */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--text);
+      animation: fadeIn 0.6s ease;
+      padding-top: 65px;
+    }
+
+    /* Header */
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      flex: 0 0 auto;
+    }
+
+    header nav {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+    }
+
+    header nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: 0.3s;
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    header nav a:hover {
+      color: var(--accent);
+    }
+
+    /* Main content */
+    main {
+      max-width: 900px;
+      margin: 30px auto;
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      animation: slideUp 0.8s ease;
+    }
+
+    h2 {
+      color: var(--primary-dark);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    /* Form */
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-weight: 600;
+      margin: 0.8rem 0 0.3rem;
+      color: var(--text);
+    }
+
+    input, textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0,119,204,0.15);
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-top: 1rem;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .back-link {
+      display: inline-block;
+      text-decoration: none;
+      color: var(--primary);
+      margin-top: 1.5rem;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+
+    .back-link:hover {
+      color: var(--primary-dark);
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: #eef3f8;
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 40px;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .loading {
+      text-align: center;
+      color: var(--text-light);
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- =========================
+       Header
+       ========================= -->
+  <header>
+    <h1>Q-now</h1>
+    <nav>
+      <a href="Q-Now.html">Home</a>
+    </nav>
+  </header>
+
+  <!-- =========================
+       Main Section
+       ========================= -->
+  <main>
+    <h2>Edit Establishment</h2>
+
+    <!-- =========================
+         Form for Editing Establishment
+         ========================= -->
+    <form id="establishmentForm">
+      <!-- Company Name -->
+      <label for="company-name">Company Name</label>
+      <input type="text" id="company-name" required />
+
+      <!-- Description -->
+      <label for="company-description">Company Description</label>
+      <textarea id="company-description" rows="3" required></textarea>
+
+      <!-- Address -->
+      <label for="address">Address</label>
+      <textarea id="address" rows="3" required></textarea>
+
+      <!-- Contact Info -->
+      <label for="contact-person">Contact Person</label>
+      <input type="text" id="contact-person" required />
+
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" required />
+
+      <!-- Departments & Services -->
+      <label for="departments">Departments (comma-separated)</label>
+      <input type="text" id="departments" placeholder="e.g. Pediatrics, Radiology, Pharmacy" />
+
+      <label for="services">Services (comma-separated)</label>
+      <input type="text" id="services" placeholder="e.g. Checkup, Lab Test, Consultation" />
+
+      <!-- Counters -->
+      <label for="counters">Number of Counters</label>
+      <input type="number" id="counters" min="1" required />
+
+      <!-- Operating Hours -->
+      <label for="hours">Operating Hours</label>
+      <input type="text" id="hours" placeholder="e.g. Mon–Fri 8:00 AM – 5:00 PM" required />
+
+      <!-- Submit Button -->
+      <button type="submit">Save Changes</button>
+    </form>
+
+    <!-- Back Link -->
+    <a href="Q-Now.html" class="back-link">← Back to Dashboard</a>
+  </main>
+
+  <!-- =========================
+       Footer
+       ========================= -->
+  <footer>
+    <p>© 2025 Q-now. All rights reserved.</p>
+  </footer>
+
+  <!-- =========================
+       Firebase Script
+       ========================= -->
+  <script type="module">
+    // Import necessary Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+    // =========================
+    // Firebase configuration
+    // =========================
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+      authDomain: "q-now-7d98a.firebaseapp.com",
+      databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "q-now-7d98a",
+      storageBucket: "q-now-7d98a.firebasestorage.app",
+      messagingSenderId: "72096271594",
+      appId: "1:72096271594:web:b86777a11af444aac49b93"
+    };
+
+    // Initialize Firebase app
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    // Reference the form
+    const form = document.getElementById("establishmentForm");
+
+    // Get establishment ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const estId = urlParams.get("id");
+
+    if (!estId) {
+      alert("No establishment ID provided.");
+      window.location.href = "Q-Now.html";
+    }
+
+    // =========================
+    // Load establishment data when auth state is ready
+    // =========================
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("You must be logged in to edit an establishment.");
+        window.location.href = "Login.html";
+        return;
+      }
+
+      try {
+        const estRef = ref(db, `establishments/${estId}`);
+        const snapshot = await get(estRef);
+
+        if (!snapshot.exists()) {
+          alert("Establishment not found.");
+          window.location.href = "Q-Now.html";
+          return;
+        }
+
+        const est = snapshot.val();
+
+        // Check if user owns this establishment
+        if (est.ownerId !== user.uid) {
+          alert("You do not have permission to edit this establishment.");
+          window.location.href = "Q-Now.html";
+          return;
+        }
+
+        // Populate form with existing data
+        document.getElementById("company-name").value = est.companyName || "";
+        document.getElementById("company-description").value = est.companyDescription || "";
+        document.getElementById("address").value = est.address || "";
+        document.getElementById("contact-person").value = est.contactPerson || "";
+        document.getElementById("phone").value = est.phone || "";
+        document.getElementById("email").value = est.email || "";
+        document.getElementById("departments").value = (est.departments || []).join(", ");
+        document.getElementById("services").value = (est.services || []).join(", ");
+        document.getElementById("counters").value = Object.keys(est.counters || {}).length || 1;
+        document.getElementById("hours").value = est.hours || "";
+      } catch (error) {
+        alert("Error loading establishment: " + error.message);
+      }
+    });
+
+    // =========================
+    // Form submission event for updating
+    // =========================
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) {
+        alert("You must be logged in to update an establishment.");
+        return;
+      }
+
+      // Prepare counters object based on user input
+      const countersCount = parseInt(document.getElementById("counters").value);
+      const counters = {};
+      for (let i = 1; i <= countersCount; i++) {
+        counters[`counter${i}`] = { name: `Counter ${i}`, accepting: true };
+      }
+
+      // Collect updated establishment data
+      const updatedData = {
+        companyName: document.getElementById("company-name").value,
+        companyDescription: document.getElementById("company-description").value,
+        address: document.getElementById("address").value,
+        contactPerson: document.getElementById("contact-person").value,
+        phone: document.getElementById("phone").value,
+        email: document.getElementById("email").value,
+        departments: document.getElementById("departments").value
+          .split(",").map(s => s.trim()).filter(Boolean),
+        services: document.getElementById("services").value
+          .split(",").map(s => s.trim()).filter(Boolean),
+        counters,
+        hours: document.getElementById("hours").value,
+        ownerId: user.uid,
+        createdAt: Date.now()
+      };
+
+      try {
+        const estRef = ref(db, `establishments/${estId}`);
+        await set(estRef, updatedData);
+        alert("✅ Establishment updated successfully!");
+        window.location.href = "Q-Now.html";
+      } catch (error) {
+        alert("❌ Error updating establishment: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+/*
+SYSTEM CONTEXT:
+This is a healthcare check-in system called HealthGate.
+
+The backend uses Firebase Realtime Database with this fixed structure:
+
+patients/{patientId}
+- name: string
+- pin: string
+- active: boolean
+
+credentials/rfid/{rfidUid}
+- patientId: string
+- enabled: boolean
+
+arrivals/{arrivalId}
+- patientId: string
+- timestamp: number (milliseconds)
+- deviceId: string
+- method: "rfid" | "qr"
+
+IMPORTANT RULES:
+- RFID UID is NOT a patient ID.
+- RFID UID is a credential that maps to a patientId.
+- The website manages credentials.
+- The ESP32 device only reads credentials and writes arrivals.
+- Patients cannot manage credentials.
+
+All code must follow this model exactly.
+*/

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Q-now | Analytics Dashboard</title>
+
+  <style>
+    /* --- Theme Variables --- */
+    :root {
+      --primary: #0077cc;
+      --primary-dark: #005fa3;
+      --accent: #00aaff;
+      --light-bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --text: #333;
+      --text-light: #555;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      --radius: 10px;
+      --transition: all 0.25s ease;
+    }
+
+    /* --- Body styling and animations --- */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--text);
+      animation: fadeInBody 0.8s ease;
+      padding-top: 65px;
+    }
+
+    /* --- Header --- */
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      animation: slideDown 0.6s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.3rem;
+      flex: 0 0 auto;
+    }
+
+    nav {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+      align-items: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+    /* Notifications */
+    .notif-container{ position:relative; margin-left:6px; }
+    .notif-bell{ cursor:pointer; position:relative; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:500; }
+    .notif-badge{ position:absolute; top:-6px; right:-8px; background:#ff3b30; color:#fff; border-radius:10px; padding:0 6px; font-size:0.7rem; display:none; }
+    .notif-panel{ position:absolute; right:0; top:28px; width:320px; max-height:360px; overflow:auto; background:#fff; color:#333; border:1px solid #ddd; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.15); display:none; z-index:1200; }
+    .notif-item{ padding:10px 12px; border-bottom:1px solid #eee; cursor:pointer; transition:background 0.2s, opacity 0.2s; }
+    .notif-item.unread{ background:#f5faff; }
+    .notif-item.read{ opacity:0.75; }
+    .notif-item.new-open{ background:#e6f0ff; }
+    .notif-item:last-child{ border-bottom:none; }
+    .notif-title{ font-weight:600; font-size:0.9rem; }
+    .notif-meta{ font-size:0.8rem; color:#666; }
+
+    /* --- Main content --- */
+    main {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 25px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    h2 { color: var(--primary-dark); margin-top: 0; }
+    h3 { color: var(--text-light); margin-bottom: 0.5rem; }
+
+    /* --- Analytics cards --- */
+    #analyticsData > div {
+      background: #f9fbff;
+      border: 1px solid #e0e7ef;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 15px;
+      transition: var(--transition);
+    }
+
+    #analyticsData > div:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 15px;
+      margin: 5px 0;
+    }
+
+    li {
+      color: var(--text-light);
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      margin: 25px auto;
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+      background: #eef3f8;
+      color: #666;
+      font-size: 0.9rem;
+    }
+
+    /* --- Animations --- */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInBody {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header and navigation -->
+  <header>
+    <h1>Analytics</h1>
+    <nav>
+      <a href="Q-Now.html">Home</a>
+      <a href="Live_Queue.html">Live Queue</a>
+      <a href="Appointments.html">Appointments</a>
+      <a href="Search.html">Search Database</a>
+      <div class="notif-container" id="notifContainer">
+        <span class="notif-bell" id="notifBell" title="Notifications">🔔
+          <span class="notif-badge" id="notifBadge">0</span>
+        </span>
+        <div class="notif-panel" id="notifPanel">
+          <div class="notif-item"><span class="notif-meta">No notifications yet</span></div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main analytics section -->
+  <main>
+    <section>
+      <h2>Performance Overview</h2>
+      <!-- Dynamic analytics data will appear here -->
+      <div id="analyticsData"><p>Loading averages...</p></div>
+      <!-- Charts for wait times and service times -->
+      <canvas id="waitChart"></canvas>
+      <canvas id="serviceChart"></canvas>
+      <canvas id="noShowChart"></canvas>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 Q-now. All rights reserved.</p>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+ <script>
+/* --- Firebase initialization --- */
+const firebaseConfig = {
+  apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+  authDomain: "q-now-7d98a.firebaseapp.com",
+  databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  projectId: "q-now-7d98a",
+  storageBucket: "q-now-7d98a.firebasestorage.app",
+  messagingSenderId: "72096271594",
+  appId: "1:72096271594:web:b86777a11af444aac49b93"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+
+// Notifications (Compat)
+const notifBell = document.getElementById("notifBell");
+const notifPanel = document.getElementById("notifPanel");
+const notifBadge = document.getElementById("notifBadge");
+let notifications = [];
+const READ_STORAGE_KEY = "qnow_notif_read";
+let readKeys = {};
+try{ readKeys = JSON.parse(localStorage.getItem(READ_STORAGE_KEY)||"{}"); }catch(_){ readKeys={}; }
+const seen = { resched:new Set(), cancel:new Set(), queue:new Set(), arrival:new Set(), due:new Set() };
+const estNameCache = {}; const patientNameCache = {};
+  notifBell?.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    const opening = !(notifPanel.style.display==="block");
+    notifPanel.style.display = opening ? "block" : "none";
+    if(opening){
+      window.__justReadKeys = new Set();
+      notifications.forEach(n=>{ const k=notifKey(n); if(!readKeys[k]) __justReadKeys.add(k); readKeys[k]=true; n.read=true; });
+      localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys));
+      updateNotifUI();
+    }
+  });
+  document.addEventListener("click", ()=>{ if(notifPanel){ notifPanel.style.display="none"; window.__justReadKeys = new Set(); updateNotifUI(); } });
+document.addEventListener("click", ()=>{ if(notifPanel) notifPanel.style.display="none"; });
+function notifKey(n){ return [n.type||"", n.estId||"", n.counterId||"", n.msg||"", n.ts||""].join("|"); }
+function resolveEstName(estId, cb){
+  if(estNameCache[estId]) return cb(estNameCache[estId]);
+  db.ref(`establishments/${estId}/companyName`).once("value").then(s=>{ if(s.exists()){ estNameCache[estId]=s.val(); cb(s.val()); } else { db.ref(`establishments/${estId}/name`).once("value").then(s2=>{ const nm=s2.exists()?s2.val():"Establishment"; estNameCache[estId]=nm; cb(nm); }); } });
+}
+function resolvePatientName(uid, cb){
+  if(patientNameCache[uid]) return cb(patientNameCache[uid]);
+  db.ref(`patients/${uid}/name`).once("value").then(s=>{ const nm=s.exists()?s.val():"Patient"; patientNameCache[uid]=nm; cb(nm); });
+}
+function updateNotifUI(){
+  notifications.forEach(n=>{ const k=notifKey(n); if(readKeys[k]) n.read=true; });
+  const sorted = notifications.slice().sort((a,b)=> (b.ts||0)-(a.ts||0));
+  const list = sorted.slice(0,50);
+  notifPanel.innerHTML = list.length ? list.map((n,i)=>{ const k=notifKey(n); const cls = n.read ? (readKeys && readKeys[k] && window.__justReadKeys && __justReadKeys.has && __justReadKeys.has(k) ? "new-open" : "read") : "unread"; return `<div class="notif-item ${cls}" data-idx="${i}" data-type="${n.type||''}" data-est="${n.estId||''}" data-counter="${n.counterId||''}" data-redirect="${n.redirectUrl||''}"><div class="notif-title">${n.title}</div><div class="notif-meta">${n.meta}</div><div>${n.msg}</div></div>`; }).join("") : `<div class="notif-item"><span class="notif-meta">No notifications</span></div>`;
+  const unread = notifications.filter(n=>!n.read).length;
+  notifBadge.textContent = String(unread);
+  notifBadge.style.display = unread ? "inline-block" : "none";
+  notifPanel.querySelectorAll(".notif-item[data-idx]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const idx = Number(el.getAttribute("data-idx"));
+      const itm = notifications[idx];
+      if(itm){ const k = notifKey(itm); readKeys[k]=true; localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys)); itm.read=true; updateNotifUI(); }
+      const redirect = el.getAttribute("data-redirect")||"";
+      const t = el.getAttribute("data-type")||"";
+      const estId = el.getAttribute("data-est")||"";
+      const counterId = el.getAttribute("data-counter")||"";
+      if(redirect){ window.location.href = redirect; return; }
+      if(t==="queue"||t==="arrival"){
+        if(estId&&counterId) window.location.href=`Counter.html?estId=${encodeURIComponent(estId)}&counterId=${encodeURIComponent(counterId)}`;
+        else window.location.href = "Live_Queue.html";
+      } else {
+        window.location.href = "Appointments.html";
+      }
+    });
+  });
+}
+function startNotifForEst(estId){
+  db.ref(`establishments/${estId}/rescheduleRequests`).on("value", snap=>{
+    snap.forEach(rs=>{
+      const v=rs.val(); const key=`${estId}|resched|${rs.key}`;
+      if(v && v.status==="pending" && !seen.resched.has(key)){
+        seen.resched.add(key);
+        const item={type:"reschedule", estId, title:"Appointment Reschedule", meta:"Loading...", msg:"Reschedule requested", ts:Date.now()};
+        notifications.unshift(item);
+        resolveEstName(estId, n=>{ item.meta=n; updateNotifUI(); });
+        db.ref(`establishments/${estId}/appointments/${rs.key}`).once("value").then(ap=>{
+          if(ap.exists()){ const a=ap.val(); const pid=a?.patientId; const pn=a?.patientName; if(pn){ item.msg=`Reschedule requested by ${pn}`; updateNotifUI(); } else if(pid){ resolvePatientName(pid,n=>{ item.msg=`Reschedule requested by ${n}`; updateNotifUI(); }); } }
+        });
+      }
+    }); updateNotifUI();
+  });
+  db.ref(`establishments/${estId}/appointments`).on("value", snap=>{
+    snap.forEach(as=>{ const a=as.val(); if(a && a.status==="cancelled" && a.cancelledAt){ const key=`${estId}|cancel|${as.key}`; if(!seen.cancel.has(key)){ seen.cancel.add(key); const item={type:"cancel", estId, title:"Appointment Cancelled", meta:`${a.patientName||"Patient"}`, msg:`${a.service||"-"}`, ts:a.cancelledAt}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=`${a.patientName||"Patient"} — ${n}`; updateNotifUI(); }); } } }); updateNotifUI();
+  });
+  db.ref(`establishments/${estId}/counters`).on("value", snap=>{
+    snap.forEach(cSnap=>{ const counterId=cSnap.key; const counterName=(cSnap.val()&&cSnap.val().name)||counterId; const reqSnap=cSnap.child("requests"); if(!reqSnap.exists()) return; reqSnap.forEach(r=>{ const req=r.val(); if(req && req.status==="pending"){ const key=`${estId}|queue|${counterId}|${r.key}`; if(!seen.queue.has(key)){ seen.queue.add(key); const pname=req.patientName || "Unknown"; const item={type:"queue", estId, counterId, title:"Queue Request", meta:`${counterName}`, msg:`From ${pname}`, ts:req.createdAt||Date.now()}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=`${n} — ${counterName}`; updateNotifUI(); }); } } }); }); updateNotifUI();
+  });
+  db.ref(`establishments/${estId}/arrivals`).on("value", snap=>{
+    snap.forEach(a=>{ const v=a.val(); const key=`${estId}|arrival|${a.key}`; if(v && !seen.arrival.has(key)){ seen.arrival.add(key); const item={type:"arrival", estId, title:"Patient Arrived", meta:"Loading...", msg:"Arrival verified", ts:v.timestamp||Date.now()}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=n; updateNotifUI(); }); if(v.uid){ resolvePatientName(v.uid, n=>{ item.msg=`${n} has arrived`; updateNotifUI(); }); } } }); updateNotifUI();
+  });
+}
+
+const analyticsData = document.getElementById("analyticsData");
+const waitCtx = document.getElementById("waitChart").getContext("2d");
+const serviceCtx = document.getElementById("serviceChart").getContext("2d");
+const noShowCtx = document.getElementById("noShowChart").getContext("2d");
+
+let waitChart, serviceChart, noShowChart;
+
+/* --- Monitor authentication state --- */
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    analyticsData.innerHTML = "<p>Please log in first.</p>";
+    return;
+  }
+
+  // Start notifications for owned establishments
+  db.ref("establishments").once("value").then(snap=>{
+    notifications = [];
+    if(snap.exists()){
+      snap.forEach(estSnap=>{
+        const est = estSnap.val();
+        const eid = estSnap.key;
+        if ((est.ownerId || est.uid || est.createdBy) === user.uid) {
+          startNotifForEst(eid);
+        }
+      });
+    }
+  });
+
+  db.ref("establishments").once("value").then(snap => {
+    if (!snap.exists()) {
+      analyticsData.innerHTML = "<p>No establishments found.</p>";
+      return;
+    }
+
+    const estPromises = [];
+
+    snap.forEach(estSnap => {
+      const estData = estSnap.val();
+      if (estData.ownerId !== user.uid) return;
+
+      const estId = estSnap.key;
+      const estName = estData.companyName || "Establishment";
+      const counters = estData.counters || {};
+
+      const counterPromises = Object.entries(counters).map(([counterId, counter]) =>
+        calculateCounterStats(estId, counterId, counter.name || "Counter")
+      );
+
+      estPromises.push(
+        Promise.all(counterPromises).then(results => ({
+          estId,
+          estName,
+          counters: results
+        }))
+      );
+    });
+
+    Promise.all(estPromises).then(estResults => {
+      renderAnalytics(estResults);
+    });
+  });
+});
+
+/* --- Calculate average wait/service and no-shows for a counter --- */
+function calculateCounterStats(estId, counterId, counterName) {
+  let totalWait = 0, totalService = 0, count = 0;
+  let noShowsCount = 0;
+
+  const patientsPromise = db.ref("patients").once("value").then(pSnap => {
+    const tasks = [];
+    pSnap.forEach(p => {
+      const uid = p.key;
+      tasks.push(
+        db.ref(`patients/${uid}/visited`).once("value").then(vSnap => {
+          vSnap.forEach(v => {
+            const vData = v.val();
+            if (vData.estId === estId && vData.counterId === counterId) {
+              if (vData.waitMs) totalWait += vData.waitMs;
+              if (vData.serviceMs) totalService += vData.serviceMs;
+              count++;
+            }
+          });
+        })
+      );
+    });
+    return Promise.all(tasks);
+  });
+
+  const noShowPromise = db.ref(`establishments/${estId}/counters/${counterId}/analytics/noShows`)
+    .once("value")
+    .then(snap => {
+      noShowsCount = snap.exists() ? snap.val() : 0;
+    });
+
+  return Promise.all([patientsPromise, noShowPromise]).then(() => ({
+    counterId,
+    counterName,
+    avgWait: count ? totalWait / count : 0,
+    avgService: count ? totalService / count : 0,
+    noShows: noShowsCount
+  }));
+}
+
+/* --- Render analytics dashboard and charts --- */
+function renderAnalytics(estResults) {
+  analyticsData.innerHTML = "";
+
+  estResults.forEach(est => {
+    let waitLabels = [], waitData = [];
+    let serviceLabels = [], serviceData = [];
+    let noShowLabels = [], noShowData = [];
+
+    // Card for establishment summary
+    const estDiv = document.createElement("div");
+    estDiv.style.marginBottom = "30px";
+    estDiv.style.padding = "15px";
+    estDiv.style.border = "1px solid #e0e7ef";
+    estDiv.style.borderRadius = "10px";
+    estDiv.style.background = "#f9fbff";
+
+    estDiv.innerHTML = `<h3>${est.estName}</h3>`;
+    const list = document.createElement("ul");
+
+    let totalWait = 0, totalService = 0, cnt = 0, totalNoShows = 0;
+
+    est.counters.forEach(c => {
+      const avgWaitMin = Number((c.avgWait / 60000).toFixed(1));
+      const avgServiceMin = Number((c.avgService / 60000).toFixed(1));
+      const noShowsCount = c.noShows || 0;
+
+      // --- Write avgWaitMin to Firebase for the app ---
+    db.ref(`establishments/${est.estId}/counters/${c.counterId}/avgQueueTime`).set(avgWaitMin.toString())
+      .catch(err => console.error("Failed to write avgQueueTime:", err));
+
+      list.innerHTML += `<li>${c.counterName}: <b>Wait</b> ${avgWaitMin} mins • <b>Service</b> ${avgServiceMin} mins • <b>No-Shows</b> ${noShowsCount}</li>`;
+
+      waitLabels.push(c.counterName);
+      waitData.push(avgWaitMin);
+      serviceLabels.push(c.counterName);
+      serviceData.push(avgServiceMin);
+      noShowLabels.push(c.counterName);
+      noShowData.push(noShowsCount);
+
+      totalWait += c.avgWait;
+      totalService += c.avgService;
+      totalNoShows += noShowsCount;
+      cnt++;
+    });
+
+    const overallWait = cnt ? (totalWait / cnt / 60000).toFixed(1) : 0;
+    const overallService = cnt ? (totalService / cnt / 60000).toFixed(1) : 0;
+    estDiv.innerHTML += `<p><b>Overall Avg Wait:</b> ${overallWait} mins • <b>Overall Avg Service:</b> ${overallService} mins • <b>Total No-Shows:</b> ${totalNoShows}</p>`;
+    estDiv.appendChild(list);
+
+    // Container to hold the three charts side by side
+    const chartRow = document.createElement("div");
+    chartRow.style.display = "flex";
+    chartRow.style.gap = "15px";
+    chartRow.style.flexWrap = "wrap"; // Wrap on smaller screens
+    chartRow.style.marginTop = "20px";
+
+    // Create canvas elements
+    const waitCanvas = document.createElement("canvas");
+    const serviceCanvas = document.createElement("canvas");
+    const noShowCanvas = document.createElement("canvas");
+
+    // Make each chart take equal width
+    [waitCanvas, serviceCanvas, noShowCanvas].forEach(canvas => {
+      canvas.style.flex = "1 1 300px"; // min width 300px, grow as needed
+      chartRow.appendChild(canvas);
+    });
+
+    estDiv.appendChild(chartRow);
+    analyticsData.appendChild(estDiv);
+
+    // Render charts
+    new Chart(waitCanvas.getContext("2d"), {
+      type: "bar",
+      data: { labels: waitLabels, datasets: [{ label: "Avg Wait Time (minutes)", data: waitData, backgroundColor: "#0077cc" }] },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    new Chart(serviceCanvas.getContext("2d"), {
+      type: "bar",
+      data: { labels: serviceLabels, datasets: [{ label: "Avg Service Time (minutes)", data: serviceData, backgroundColor: "#28a745" }] },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+
+    new Chart(noShowCanvas.getContext("2d"), {
+      type: "bar",
+      data: { labels: noShowLabels, datasets: [{ label: "No-Shows per Counter", data: noShowData, backgroundColor: "#dc3545" }] },
+      options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+  });
+}
+
+</script>
+</body>
+</html>

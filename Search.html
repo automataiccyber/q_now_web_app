@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Database Search | Q-Now</title>
+  <style>
+    :root {
+      --primary: #0077cc;
+      --primary-dark: #005fa3;
+      --accent: #00aaff;
+      --light-bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --text: #333;
+      --text-light: #555;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      --radius: 10px;
+      --transition: all 0.25s ease;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--text);
+      animation: fadeIn 0.5s ease;
+      padding-top: 65px;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    header h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      letter-spacing: 0.3px;
+      flex: 0 0 auto;
+    }
+
+    header a {
+      color: white;
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    header a:hover {
+      color: var(--accent);
+    }
+
+    nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+    }
+
+    nav a {
+      color: #fff;
+      margin-left: 0;
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+    /* Notifications */
+    .notif-container{ position:relative; margin-left:6px; }
+    .notif-bell{ cursor:pointer; position:relative; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:500; }
+    .notif-badge{ position:absolute; top:-6px; right:-8px; background:#ff3b30; color:#fff; border-radius:10px; padding:0 6px; font-size:0.7rem; display:none; }
+    .notif-panel{ position:absolute; right:0; top:28px; width:320px; max-height:360px; overflow:auto; background:#fff; color:#333; border:1px solid #ddd; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.15); display:none; z-index:1200; }
+    .notif-item{ padding:10px 12px; border-bottom:1px solid #eee; cursor:pointer; transition:background 0.2s, opacity 0.2s; }
+    .notif-item.unread{ background:#f5faff; }
+    .notif-item.read{ opacity:0.75; }
+    .notif-item.new-open{ background:#e6f0ff; }
+    .notif-item:last-child{ border-bottom:none; }
+    .notif-title{ font-weight:600; font-size:0.9rem; }
+    .notif-meta{ font-size:0.8rem; color:#666; }
+
+    .container {
+      max-width: 1000px;
+      margin: 30px auto;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.6s ease;
+    }
+
+    h1 {
+      color: var(--primary-dark);
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    p {
+      text-align: center;
+      color: var(--text-light);
+      margin-bottom: 25px;
+    }
+
+    .search-section {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    #searchInput {
+      flex: 1;
+      min-width: 250px;
+      padding: 12px 16px;
+      font-size: 1rem;
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    #searchInput:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 6px rgba(0, 119, 204, 0.3);
+    }
+
+    .filter-select {
+      padding: 12px 12px;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      outline: none;
+      transition: var(--transition);
+      background: white;
+    }
+
+    .filter-select:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-search {
+      padding: 12px 24px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+
+    .btn-search:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-clear {
+      padding: 12px 24px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+
+    .btn-clear:hover {
+      background: #5a6268;
+    }
+
+    #results {
+      display: none;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .result-count {
+      color: var(--text-light);
+      font-size: 0.95rem;
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .results-table thead {
+      background: var(--light-bg);
+      border-bottom: 2px solid var(--primary);
+    }
+
+    .results-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--primary-dark);
+      font-size: 0.95rem;
+    }
+
+    .results-table td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      font-size: 0.95rem;
+    }
+
+    .results-table tbody tr {
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .results-table tbody tr:hover {
+      background: #f0f0f0;
+    }
+
+    .results-table tbody tr.selected {
+      background: #e3f2fd;
+      border-left: 4px solid var(--primary);
+    }
+
+    .patient-detail-panel {
+      display: none;
+      background: var(--light-bg);
+      border: 2px solid var(--primary);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .patient-detail-panel.active {
+      display: block;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .patient-detail-panel.closing {
+      animation: fadeDown 0.3s ease forwards;
+    }
+
+    .detail-title {
+      color: var(--primary-dark);
+      margin-bottom: 15px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .detail-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .detail-row {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-label {
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 5px;
+      font-size: 0.9rem;
+    }
+
+    .detail-value {
+      color: var(--text-light);
+      padding: 8px;
+      background: white;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      font-weight: 500;
+    }
+
+    .btn.add {
+      background: #28a745;
+      color: white;
+    }
+
+    .btn.add:hover {
+      background: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+
+    .btn.view {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .btn.view:hover {
+      background: #138496;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(23, 162, 184, 0.3);
+    }
+
+    .btn.more-info {
+      background: #6f42c1;
+      color: white;
+    }
+
+    .btn.more-info:hover {
+      background: #5a32a3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(111, 66, 193, 0.3);
+    }
+
+    .btn.manual-add {
+      background: #fd7e14;
+      color: white;
+    }
+
+    .btn.manual-add:hover {
+      background: #e56a00;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(253, 126, 20, 0.3);
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      padding: 8px 12px;
+      border: 1px solid var(--primary);
+      background: white;
+      color: var(--primary);
+      border-radius: 5px;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .pagination button:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .pagination button.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-light);
+      font-size: 1.1rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+      font-size: 0.9rem;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-15px); }
+    }
+
+    .search-type-toggle {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .toggle-btn {
+      padding: 10px 16px;
+      border: 2px solid var(--primary);
+      background: white;
+      color: var(--primary);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .toggle-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .toggle-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Manual Add Modal Styles */
+    .manual-add-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+    }
+
+    .manual-add-modal.active {
+      display: flex;
+    }
+
+    .manual-add-dialog {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      color: var(--primary-dark);
+      font-size: 1.2rem;
+    }
+
+    .modal-close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-light);
+      transition: var(--transition);
+      padding: 0;
+      width: 30px;
+      height: 30px;
+    }
+
+    .modal-close-btn:hover {
+      color: var(--primary);
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .modal-body p {
+      margin: 0 0 15px 0;
+      text-align: left;
+    }
+
+    .counter-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .counter-option {
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      background: white;
+    }
+
+    .counter-option:hover {
+      border-color: var(--primary);
+      background: #f9f9f9;
+    }
+
+    .counter-option.selected {
+      border-color: var(--primary);
+      background: #e3f2fd;
+    }
+
+    .counter-option-name {
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 5px;
+    }
+
+    .counter-option-meta {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      line-height: 1.4;
+    }
+
+    .no-establishments {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      padding: 20px;
+      border-top: 1px solid #eee;
+    }
+
+    .modal-footer .btn {
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h2>Q-Now Patient Database</h2>
+    <nav>
+      <a href="Q-Now.html">Home</a>
+      <a href="Live_Queue.html">Live Queue</a>
+      <a href="Appointments.html">Appointments</a>
+      <a href="Analytics.html">Analytics</a>
+      <a href="Dropbox.html">Document Dropbox</a>
+      <div class="notif-container" id="notifContainer">
+        <span class="notif-bell" id="notifBell" title="Notifications">🔔
+          <span class="notif-badge" id="notifBadge">0</span>
+        </span>
+        <div class="notif-panel" id="notifPanel">
+          <div class="notif-item"><span class="notif-meta">No notifications yet</span></div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div class="container">
+    <h1>Search Patient Database</h1>
+    <p>Enter patient details to find records.</p>
+
+    <div class="search-section">
+      <div class="search-type-toggle">
+        <button class="toggle-btn active" id="toggleName" data-type="name">By Name</button>
+        <button class="toggle-btn" id="togglePatientId" data-type="patientId">By Patient ID</button>
+      </div>
+      <input type="text" id="searchInput" placeholder="Search by name..." />
+      <select id="establishmentSelect" class="filter-select">
+        <option value="">All Records</option>
+        <option value="">Current Establishment</option>
+      </select>
+      <button class="btn-search" id="btnSearch">Search</button>
+      <button class="btn-clear" id="btnClear">Clear</button>
+    </div>
+
+    <div id="results">
+      <div class="results-header">
+        <h3 style="margin: 0; color: var(--primary-dark);">Search Results</h3>
+        <span class="result-count"><span id="resultCount">0</span> patient(s) found</span>
+      </div>
+
+      <table class="results-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Contact</th>
+            <th>Health Info</th>
+            <th>Last Appointment</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody">
+        </tbody>
+      </table>
+
+      <div id="patientDetailPanel" class="patient-detail-panel">
+        <div class="detail-title">Patient Details</div>
+        <div class="detail-info">
+          <div class="detail-row">
+            <span class="detail-label">Full Name</span>
+            <span class="detail-value" id="detailName">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Email</span>
+            <span class="detail-value" id="detailEmail">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Contact Number</span>
+            <span class="detail-value" id="detailContact">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Address</span>
+            <span class="detail-value" id="detailAddress">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Last Appointment</span>
+            <span class="detail-value" id="detailLastAppt">-</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Patient ID</span>
+            <span class="detail-value" id="detailUID">-</span>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button class="btn view" id="btnApptsDetail">View Appointments</button>
+          <button class="btn more-info" id="btnMoreInfo">More Info</button>
+          <button class="btn manual-add" id="btnManualAdd">Manual Add</button>
+          <button class="btn" id="btnOpenDropbox" style="background-color: #0077cc; color: white;">Open Dropbox</button>
+          <button class="btn" id="btnAssignRFID" style="background-color: #17a2b8; color: white;">Assign RFID</button>
+          <button class="btn" id="btnDisableRFID" style="background-color: #dc3545; color: white;">Disable RFID</button>
+        </div>
+      </div>
+
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <div id="noResults" class="no-results" style="display: none;">
+      No patients found. Try adjusting your search criteria.
+    </div>
+
+    <!-- Manual Add Modal -->
+    <div id="manualAddModal" class="manual-add-modal">
+      <div class="manual-add-dialog">
+        <div class="modal-header">
+          <h3>Add Patient to Queue</h3>
+          <button id="modalCloseBtn" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Patient: <strong id="modalPatientName">-</strong></p>
+          <p style="color: var(--text-light); font-size: 0.9rem;">Select a counter to add this patient to the queue:</p>
+          <div style="margin: 8px 0;">
+            <label style="margin-right: 12px;">
+              <input type="radio" name="addDest" value="queue" checked>
+              Add to Queue
+            </label>
+            <label>
+              <input type="radio" name="addDest" value="awaiting">
+              Add to Awaiting Arrival
+            </label>
+          </div>
+          <div id="counterListContainer" class="counter-list"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="modalCancelBtn" class="btn btn-clear">Cancel</button>
+          <button id="modalConfirmBtn" class="btn btn-search" disabled>Add to Queue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RFID Assignment Modal -->
+    <div id="rfidModal" class="manual-add-modal">
+      <div class="manual-add-dialog">
+        <div class="modal-header">
+          <h3>Assign RFID Card</h3>
+          <button id="rfidModalCloseBtn" class="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Patient: <strong id="rfidModalPatientName">-</strong></p>
+          <p style="color: var(--text-light); font-size: 0.9rem; margin-bottom: 15px;">Enter or scan the RFID card UID:</p>
+          <input type="text" id="rfidInput" placeholder="Scan or enter RFID UID..." style="width: 100%; padding: 12px; border: 2px solid var(--primary); border-radius: 8px; font-size: 1rem; margin-bottom: 15px;">
+          <div id="rfidWarning" style="display: none; padding: 12px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; color: #856404; margin-bottom: 15px;">
+            <strong>⚠️ RFID Already Exists</strong><br>
+            <span id="rfidExistingPatient"></span><br>
+            This RFID is already assigned to another patient. Overwrite?
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="rfidModalCancelBtn" class="btn btn-clear">Cancel</button>
+          <button id="rfidModalConfirmBtn" class="btn btn-search">Assign RFID</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Q-Now. All rights reserved.</p>
+  </footer>
+
+  <!-- Disable RFID Modal -->
+  <div id="disableRFIDModal" class="manual-add-modal">
+    <div class="manual-add-dialog">
+      <div class="modal-header">
+        <h3>⚠️ Disable RFID Card</h3>
+        <button id="disableRFIDModalCloseBtn" class="modal-close-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Patient: <strong id="disableRFIDPatientName">-</strong></p>
+        <div id="rfidInfoBox" style="padding: 15px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; margin: 15px 0; color: #856404;">
+          <p style="margin: 0 0 10px 0;"><strong>RFID Card Details:</strong></p>
+          <p style="margin: 8px 0;"><strong>Card UID:</strong> <span id="disableRFIDCardUID" style="font-family: monospace; font-weight: bold;">-</span></p>
+          <p style="margin: 8px 0;"><strong>Status:</strong> <span id="disableRFIDCardStatus" style="color: #28a745; font-weight: bold;">Enabled ✓</span></p>
+        </div>
+        <div id="disableRFIDWarning" style="padding: 15px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 6px; margin: 15px 0; color: #721c24;">
+          <p style="margin: 0;"><strong>⚠️ Warning:</strong> Disabling this RFID card will prevent the patient from checking in with this device. The card record will be preserved but marked as inactive.</p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="disableRFIDModalCancelBtn" class="btn btn-clear">Cancel</button>
+        <button id="disableRFIDModalConfirmBtn" class="btn" style="background-color: #dc3545; color: white;">Disable RFID</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+      authDomain: "q-now-7d98a.firebaseapp.com",
+      databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "q-now-7d98a",
+      storageBucket: "q-now-7d98a.firebasestorage.app",
+      messagingSenderId: "72096271594",
+      appId: "1:72096271594:web:b86777a11af444aac49b93"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    // Notifications (Compat)
+    const notifBell = document.getElementById("notifBell");
+    const notifPanel = document.getElementById("notifPanel");
+    const notifBadge = document.getElementById("notifBadge");
+    let notifications = [];
+    const seen = { resched:new Set(), cancel:new Set(), queue:new Set(), arrival:new Set(), due:new Set() };
+    const estNameCache = {}; const patientNameCache = {};
+    notifBell?.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const opening = !(notifPanel.style.display==="block");
+      notifPanel.style.display = opening ? "block" : "none";
+      if (opening) {
+        window.__justReadKeys = new Set();
+        notifications.forEach(n=>{ const k=[n.type||"",n.estId||"",n.counterId||"",n.msg||"",n.ts||""].join("|"); if(!readKeys[k]) __justReadKeys.add(k); readKeys[k]=true; n.read=true; });
+        localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys));
+        updateNotifUI();
+      }
+    });
+    document.addEventListener("click", ()=>{ if(notifPanel){ notifPanel.style.display="none"; window.__justReadKeys = new Set(); updateNotifUI(); } });
+    document.addEventListener("click", ()=>{ if(notifPanel) notifPanel.style.display="none"; });
+    function resolveEstName(estId, cb){
+      if(estNameCache[estId]) return cb(estNameCache[estId]);
+      db.ref(`establishments/${estId}/companyName`).once("value").then(s=>{ if(s.exists()){ estNameCache[estId]=s.val(); cb(s.val()); } else { db.ref(`establishments/${estId}/name`).once("value").then(s2=>{ const nm=s2.exists()?s2.val():"Establishment"; estNameCache[estId]=nm; cb(nm); }); } });
+    }
+    function resolvePatientName(uid, cb){
+      if(patientNameCache[uid]) return cb(patientNameCache[uid]);
+      db.ref(`patients/${uid}/name`).once("value").then(s=>{ const nm=s.exists()?s.val():"Patient"; patientNameCache[uid]=nm; cb(nm); });
+    }
+    function updateNotifUI(){
+      function notifKey(n){ if(n && n.key) return [n.type||"",n.estId||"",n.counterId||"",n.key].join("|"); return [n.type||"",n.estId||"",n.counterId||"",n.title||"",n.meta||""].join("|"); }
+      notifications.forEach(n=>{ const k=notifKey(n); if(readKeys[k]) n.read=true; });
+      const sorted = notifications.slice().sort((a,b)=> (b.ts||0) - (a.ts||0));
+      const list = sorted.slice(0,50);
+      notifPanel.innerHTML = list.length ? list.map((n,i)=>{ const k=notifKey(n); const cls = n.read ? (window.__justReadKeys && window.__justReadKeys.has && __justReadKeys.has(k) ? "new-open" : "read") : "unread"; return `<div class="notif-item ${cls}" data-idx="${i}" data-type="${n.type||''}" data-est="${n.estId||''}" data-counter="${n.counterId||''}"><div class="notif-title">${n.title}</div><div class="notif-meta">${n.meta}</div><div>${n.msg}</div></div>`; }).join("") : `<div class="notif-item"><span class="notif-meta">No notifications</span></div>`;
+      const unread = notifications.filter(n=>!n.read).length;
+      notifBadge.textContent = String(unread);
+      notifBadge.style.display = unread ? "inline-block" : "none";
+      notifPanel.querySelectorAll(".notif-item[data-idx]").forEach(el=>{
+        el.addEventListener("click", ()=>{
+          const idx = Number(el.getAttribute("data-idx"));
+          const itm = list[idx];
+          if(itm){ const k = (itm && itm.key) ? [itm.type||"", itm.estId||"", itm.counterId||"", itm.key].join("|") : [itm.type||"", itm.estId||"", itm.counterId||"", itm.title||"", itm.meta||""].join("|"); readKeys[k]=true; localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys)); itm.read=true; updateNotifUI(); }
+          const t = el.getAttribute("data-type")||"";
+          const estId = el.getAttribute("data-est")||"";
+          const counterId = el.getAttribute("data-counter")||"";
+          if(t==="queue"||t==="arrival"){
+            if(estId&&counterId) window.location.href=`Counter.html?estId=${encodeURIComponent(estId)}&counterId=${encodeURIComponent(counterId)}`;
+            else window.location.href = "Live_Queue.html";
+          } else {
+            window.location.href = "Appointments.html";
+          }
+        });
+      });
+    }
+    function startNotifForEst(estId){
+      db.ref(`establishments/${estId}/rescheduleRequests`).on("value", snap=>{
+        snap.forEach(rs=>{
+          const v=rs.val(); const key=`${estId}|resched|${rs.key}`;
+          if(v && v.status==="pending" && !seen.resched.has(key)){
+            seen.resched.add(key);
+            const item={type:"reschedule", estId, title:"Appointment Reschedule", meta:"Loading...", msg:"Reschedule requested", ts:Date.now()};
+            notifications.unshift(item);
+            resolveEstName(estId, n=>{ item.meta=n; updateNotifUI(); });
+            db.ref(`establishments/${estId}/appointments/${rs.key}`).once("value").then(ap=>{
+              if(ap.exists()){ const a=ap.val(); const pid=a?.patientId; const pn=a?.patientName; if(pn){ item.msg=`Reschedule requested by ${pn}`; updateNotifUI(); } else if(pid){ resolvePatientName(pid,n=>{ item.msg=`Reschedule requested by ${n}`; updateNotifUI(); }); } }
+            });
+          }
+        }); updateNotifUI();
+      });
+      db.ref(`establishments/${estId}/appointments`).on("value", snap=>{
+        snap.forEach(as=>{ const a=as.val(); if(a && a.status==="cancelled" && a.cancelledAt){ const key=`${estId}|cancel|${as.key}`; if(!seen.cancel.has(key)){ seen.cancel.add(key); const item={type:"cancel", estId, title:"Appointment Cancelled", meta:`${a.patientName||"Patient"}`, msg:`${a.service||"-"}`, ts:a.cancelledAt}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=`${a.patientName||"Patient"} — ${n}`; updateNotifUI(); }); } } }); updateNotifUI();
+      });
+      db.ref(`establishments/${estId}/counters`).on("value", snap=>{
+        snap.forEach(cSnap=>{ const counterId=cSnap.key; const counterName=(cSnap.val()&&cSnap.val().name)||counterId; const reqSnap=cSnap.child("requests"); if(!reqSnap.exists()) return; reqSnap.forEach(r=>{ const req=r.val(); if(req && req.status==="pending"){ const key=`${estId}|queue|${counterId}|${r.key}`; if(!seen.queue.has(key)){ seen.queue.add(key); const pname=req.patientName || "Unknown"; const item={type:"queue", estId, counterId, title:"Queue Request", meta:`${counterName}`, msg:`From ${pname}`, ts:req.createdAt||Date.now()}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=`${n} — ${counterName}`; updateNotifUI(); }); } } }); }); updateNotifUI();
+      });
+      db.ref(`establishments/${estId}/arrivals`).on("value", snap=>{
+        snap.forEach(a=>{ const v=a.val(); const key=`${estId}|arrival|${a.key}`; if(v && !seen.arrival.has(key)){ seen.arrival.add(key); const item={type:"arrival", estId, title:"Patient Arrived", meta:"Loading...", msg:"Arrival verified", ts:v.timestamp||Date.now()}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=n; updateNotifUI(); }); if(v.uid){ resolvePatientName(v.uid, n=>{ item.msg=`${n} has arrived`; updateNotifUI(); }); } } }); updateNotifUI();
+      });
+    }
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        db.ref("establishments").once("value").then(snap=>{
+          notifications = [];
+          if(snap.exists()){
+            snap.forEach(estSnap=>{
+              const est = estSnap.val();
+              const eid = estSnap.key;
+              if ((est.ownerId || est.uid || est.createdBy) === user.uid){ startNotifForEst(eid); }
+            });
+          }
+        });
+      }
+    });
+
+    const searchInput = document.getElementById("searchInput");
+    const establishmentSelect = document.getElementById("establishmentSelect");
+    const btnSearch = document.getElementById("btnSearch");
+    const btnClear = document.getElementById("btnClear");
+    const resultsDiv = document.getElementById("results");
+    const noResultsDiv = document.getElementById("noResults");
+    const resultsBody = document.getElementById("resultsBody");
+    const resultCount = document.getElementById("resultCount");
+    const paginationDiv = document.getElementById("pagination");
+    const toggleNameBtn = document.getElementById("toggleName");
+    const togglePatientIdBtn = document.getElementById("togglePatientId");
+
+    let allPatients = [];
+    let filteredPatients = [];
+    let currentPage = 1;
+    const itemsPerPage = 10;
+    let selectedPatient = null;
+    let searchType = "name";
+
+    btnSearch.onclick = performSearch;
+    btnClear.onclick = clearSearch;
+    searchInput.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") performSearch();
+    });
+
+    // Search type toggle
+    toggleNameBtn.onclick = () => {
+      searchType = "name";
+      updateSearchToggle();
+      searchInput.placeholder = "Search by name...";
+      searchInput.value = "";
+    };
+
+    togglePatientIdBtn.onclick = () => {
+      searchType = "patientId";
+      updateSearchToggle();
+      searchInput.placeholder = "Search by patient ID...";
+      searchInput.value = "";
+    };
+
+    function updateSearchToggle() {
+      toggleNameBtn.classList.remove("active");
+      togglePatientIdBtn.classList.remove("active");
+      if (searchType === "name") {
+        toggleNameBtn.classList.add("active");
+      } else {
+        togglePatientIdBtn.classList.add("active");
+      }
+    }
+
+    // Load establishments on page load
+    window.addEventListener("load", () => {
+      const estId = localStorage.getItem("currentEstablishmentId");
+      if (estId) {
+        db.ref(`establishments/${estId}`).once("value")
+          .then(snapshot => {
+            if (snapshot.exists()) {
+              establishmentSelect.innerHTML = `<option value="${estId}">${snapshot.val().name || "Current Establishment"}</option>`;
+            }
+          });
+      }
+    });
+
+    // Close detail panel when clicking outside
+    document.addEventListener("click", (e) => {
+      const detailPanel = document.getElementById("patientDetailPanel");
+      const resultsTable = document.querySelector(".results-table");
+      const modalEl = document.getElementById("manualAddModal");
+      
+      if (selectedPatient && 
+          !detailPanel.contains(e.target) && 
+          !resultsTable.contains(e.target) &&
+          !(modalEl && (modalEl.classList.contains("active") || modalEl.contains(e.target)))) {
+        deselectPatient();
+      }
+    });
+
+    function performSearch() {
+      const query = searchInput.value.trim().toLowerCase();
+
+      db.ref("patients").once("value")
+        .then(snapshot => {
+          allPatients = [];
+          if (snapshot.exists()) {
+            snapshot.forEach(child => {
+              const patient = child.val();
+              allPatients.push({ ...patient, uid: child.key });
+            });
+          }
+
+          filteredPatients = allPatients.filter(patient => {
+            if (!query) return true;
+            
+            if (searchType === "name") {
+              return patient.name && patient.name.toLowerCase().includes(query);
+            } else {
+              return patient.uid && patient.uid.toLowerCase().includes(query);
+            }
+          });
+
+          currentPage = 1;
+          displayResults();
+        })
+        .catch(err => alert("Error: " + err.message));
+    }
+
+    function displayResults() {
+      resultsBody.innerHTML = "";
+      
+      if (filteredPatients.length === 0) {
+        resultsDiv.style.display = "none";
+        noResultsDiv.style.display = "block";
+        return;
+      }
+
+      resultsDiv.style.display = "block";
+      noResultsDiv.style.display = "none";
+      resultCount.textContent = filteredPatients.length;
+
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const pagePatients = filteredPatients.slice(startIndex, endIndex);
+
+      pagePatients.forEach(patient => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td><span class="patient-name">${patient.name || "N/A"}</span></td>
+          <td>${patient.email || "N/A"}</td>
+          <td>${patient.contactNumber || "N/A"}</td>
+          <td>${patient.healthInfo || "N/A"}</td>
+          <td>${patient.lastAppointment || "None"}</td>
+        `;
+        row.onclick = () => selectPatient(patient, row);
+        resultsBody.appendChild(row);
+      });
+
+      displayPagination();
+      deselectPatient();
+    }
+
+    function selectPatient(patient, row) {
+      document.querySelectorAll("#resultsBody tr").forEach(tr => tr.classList.remove("selected"));
+      row.classList.add("selected");
+      
+      selectedPatient = patient;
+      
+      document.getElementById("detailName").textContent = patient.name || "N/A";
+      document.getElementById("detailEmail").textContent = patient.email || "N/A";
+      document.getElementById("detailContact").textContent = patient.contactNumber || "N/A";
+      document.getElementById("detailAddress").textContent = patient.address || "N/A";
+      document.getElementById("detailLastAppt").textContent = patient.lastAppointment || "None";
+      document.getElementById("detailUID").textContent = patient.uid || "N/A";
+      
+      const detailPanel = document.getElementById("patientDetailPanel");
+      detailPanel.classList.remove("closing");
+      detailPanel.classList.add("active");
+    }
+
+    function deselectPatient() {
+      selectedPatient = null;
+      const detailPanel = document.getElementById("patientDetailPanel");
+      detailPanel.classList.add("closing");
+      setTimeout(() => {
+        detailPanel.classList.remove("active", "closing");
+      }, 300);
+      document.querySelectorAll("#resultsBody tr").forEach(tr => tr.classList.remove("selected"));
+    }
+
+    function displayPagination() {
+      paginationDiv.innerHTML = "";
+      const totalPages = Math.ceil(filteredPatients.length / itemsPerPage);
+
+      if (totalPages <= 1) return;
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.className = i === currentPage ? "active" : "";
+        btn.onclick = () => {
+          currentPage = i;
+          displayResults();
+          window.scrollTo(0, 0);
+        };
+        paginationDiv.appendChild(btn);
+      }
+    }
+
+    function clearSearch() {
+      searchInput.value = "";
+      resultsDiv.style.display = "none";
+      noResultsDiv.style.display = "none";
+      filteredPatients = [];
+      currentPage = 1;
+      deselectPatient();
+    }
+
+    document.getElementById("btnApptsDetail").onclick = () => {
+      if (!selectedPatient) return;
+      viewAppointments(selectedPatient.uid);
+    };
+
+    document.getElementById("btnMoreInfo").onclick = () => {
+      if (!selectedPatient) return;
+      window.location.href = `Patient_Detail.html?uid=${selectedPatient.uid}`;
+    };
+
+    document.getElementById("btnManualAdd").onclick = () => {
+      if (!selectedPatient) return;
+      openManualAddModal(selectedPatient);
+    };
+
+    document.getElementById("btnOpenDropbox").onclick = () => {
+      if (!selectedPatient) return;
+      window.location.href = `Dropbox.html?uid=${selectedPatient.uid}`;
+    };
+
+    /* ============================================================================
+       MANUAL ADD FEATURE
+       ============================================================================ */
+
+    const manualAddModal = document.getElementById("manualAddModal");
+    const modalCloseBtn = document.getElementById("modalCloseBtn");
+    const modalCancelBtn = document.getElementById("modalCancelBtn");
+    const modalConfirmBtn = document.getElementById("modalConfirmBtn");
+    const counterListContainer = document.getElementById("counterListContainer");
+    const modalPatientName = document.getElementById("modalPatientName");
+    const addDestInputs = () => Array.from(document.querySelectorAll('input[name="addDest"]'));
+
+    let selectedCounter = null;
+    let selectedEstablishment = null;
+    let currentUser = null;
+    let selectedAddMode = "queue";
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        try {
+          await firebase.auth().signInAnonymously();
+        } catch (err) {
+          console.error("Authentication failed:", err);
+        }
+      }
+      currentUser = firebase.auth().currentUser;
+    });
+
+    function openManualAddModal(patient) {
+      selectedPatient = patient;
+      selectedCounter = null;
+      selectedEstablishment = null;
+      modalPatientName.textContent = patient.name || "Unknown Patient";
+      modalConfirmBtn.disabled = true;
+      selectedAddMode = "queue";
+      addDestInputs().forEach(inp => {
+        inp.checked = inp.value === "queue";
+        inp.onchange = () => {
+          selectedAddMode = inp.value;
+          document.getElementById("modalConfirmBtn").textContent =
+            selectedAddMode === "awaiting" ? "Add to Awaiting" : "Add to Queue";
+        };
+      });
+
+      loadCountersForModal();
+      manualAddModal.classList.add("active");
+    }
+
+    async function loadCountersForModal() {
+      counterListContainer.innerHTML = '<div class="no-establishments">Loading counters...</div>';
+
+      if (!currentUser) {
+        try {
+          await firebase.auth().signInAnonymously();
+          currentUser = firebase.auth().currentUser;
+        } catch (err) {
+          counterListContainer.innerHTML = '<div class="no-establishments">Please log in first.</div>';
+          return;
+        }
+      }
+
+      db.ref("establishments").once("value")
+        .then(snapshot => {
+          const counters = [];
+
+          if (!snapshot.exists()) {
+            counterListContainer.innerHTML = '<div class="no-establishments">No establishments available.</div>';
+            return;
+          }
+
+          snapshot.forEach(estSnap => {
+            const estId = estSnap.key;
+            const estData = estSnap.val();
+            const ownerId = estData.ownerId || estData.uid || estData.createdBy;
+
+            // Only show establishments owned by current user
+            if (ownerId !== currentUser.uid) return;
+
+            const estName = estData.companyName || estData.name || "Unnamed Establishment";
+            const countersData = estData.counters || {};
+
+            Object.entries(countersData).forEach(([counterId, counter]) => {
+              const counterName = counter.name || "Unnamed Counter";
+              counters.push({
+                estId,
+                counterId,
+                estName,
+                counterName,
+                location: counter.location || "No location",
+                accepting: counter.accepting !== false
+              });
+            });
+          });
+
+          if (counters.length === 0) {
+            counterListContainer.innerHTML = '<div class="no-establishments">No counters available in your establishments.</div>';
+            return;
+          }
+
+          counterListContainer.innerHTML = "";
+          counters.forEach(counter => {
+            const option = document.createElement("div");
+            option.className = "counter-option";
+            option.innerHTML = `
+              <div class="counter-option-name">${counter.counterName}</div>
+              <div class="counter-option-meta">
+                📍 ${counter.estName}<br>
+                📍 ${counter.location}
+              </div>
+            `;
+
+            option.onclick = () => selectCounterOption(option, counter);
+            counterListContainer.appendChild(option);
+          });
+
+          const firstOption = counterListContainer.querySelector(".counter-option");
+          if (firstOption) {
+            selectCounterOption(firstOption, counters[0]);
+          }
+        })
+        .catch(err => {
+          console.error("Error loading counters:", err);
+          counterListContainer.innerHTML = '<div class="no-establishments">Error loading counters.</div>';
+        });
+    }
+
+    function selectCounterOption(optionElement, counter) {
+      document.querySelectorAll(".counter-option").forEach(opt => opt.classList.remove("selected"));
+      optionElement.classList.add("selected");
+
+      selectedCounter = counter;
+      selectedEstablishment = counter.estId;
+      modalConfirmBtn.disabled = false;
+    }
+
+    modalCloseBtn.onclick = closeManualAddModal;
+    modalCancelBtn.onclick = closeManualAddModal;
+
+    function closeManualAddModal() {
+      manualAddModal.classList.remove("active");
+      selectedCounter = null;
+      selectedEstablishment = null;
+      modalConfirmBtn.disabled = true;
+    }
+
+    modalConfirmBtn.onclick = async () => {
+      if (!selectedPatient || !selectedCounter || !selectedEstablishment) {
+        const firstOption = counterListContainer.querySelector(".counter-option");
+        if (firstOption) {
+          const opts = Array.from(counterListContainer.querySelectorAll(".counter-option"));
+          const idx = 0;
+          const estId = selectedEstablishment;
+          if (!selectedCounter) {
+            const nameEl = firstOption.querySelector(".counter-option-name");
+            const nameText = nameEl ? nameEl.textContent : "";
+            if (opts.length > 0) {
+              firstOption.click();
+            }
+          }
+        }
+        if (!selectedCounter || !selectedEstablishment) {
+          alert("Please select a counter.");
+          return;
+        }
+      }
+
+      try {
+        modalConfirmBtn.disabled = true;
+        const now = Date.now();
+        const estId = selectedEstablishment;
+        const counterId = selectedCounter.counterId;
+        const estName = selectedCounter.estName;
+        const counterName = selectedCounter.counterName;
+
+        if (selectedAddMode === "awaiting") {
+          // NEW: Use arrivalIndex pattern for awaiting arrival
+          // Check if patient already has an active arrival
+          const arrivalIndexSnap = await db.ref(`arrivalIndex/${selectedPatient.uid}`).once("value");
+          let currentChainOrder = 0;
+          if (arrivalIndexSnap.exists()) {
+            const arrivalIndexData = arrivalIndexSnap.val();
+            currentChainOrder = arrivalIndexData.chainOrder || 0;
+
+            // If already awaiting at the same counter/establishment, avoid duplicates
+            if (
+              arrivalIndexData.status === "awaiting_arrival" &&
+              arrivalIndexData.counterId === counterId &&
+              arrivalIndexData.estId === estId
+            ) {
+              alert(`ℹ️ ${selectedPatient.name} is already awaiting arrival at ${counterName}.`);
+              closeManualAddModal();
+              deselectPatient();
+              return;
+            }
+          }
+
+          // Only update arrivalIndex and patient status; awaitingArrival is created by Counter.html upon acceptance
+          const updates = {};
+          const chainOrder = currentChainOrder === 0 ? 0 : currentChainOrder + 1;
+          const awaitingKey = db.ref().push().key; // provide a flat awaitingKey for ESP32
+
+          if (currentChainOrder === 0) {
+            updates[`arrivalIndex/${selectedPatient.uid}`] = {
+              uid: selectedPatient.uid,
+              counterId: counterId,
+              estId: estId,
+              establishmentId: estId,
+              awaitingKey: awaitingKey,
+              chainOrder: 0,
+              status: "awaiting_arrival",
+              createdAt: firebase.database.ServerValue.TIMESTAMP
+            };
+            updates[`patients/${selectedPatient.uid}/queueStatus`] = {
+              status: "awaiting_arrival",
+              estId,
+              estName,
+              counterId,
+              counterName,
+              timestamp: now
+            };
+            const notifKey = db.ref(`patients/${selectedPatient.uid}/notifications`).push().key;
+            updates[`patients/${selectedPatient.uid}/notifications/${notifKey}`] = {
+              type: "queue",
+              estId,
+              estName,
+              counterId,
+              counterName,
+              message: "Awaiting arrival",
+              timestamp: now
+            };
+          } else {
+            // Chain queueing case - awaiting for next service
+            updates[`patients/${selectedPatient.uid}/queueStatus`] = {
+              status: "awaiting_arrival_chain",
+              estId,
+              estName,
+              counterId,
+              counterName,
+              timestamp: now
+            };
+            const notifKey = db.ref(`patients/${selectedPatient.uid}/notifications`).push().key;
+            updates[`patients/${selectedPatient.uid}/notifications/${notifKey}`] = {
+              type: "queue",
+              estId,
+              estName,
+              counterId,
+              counterName,
+              message: "Queued for next service (chain queueing)",
+              timestamp: now
+            };
+          }
+
+          await db.ref().update(updates);
+          alert(`✅ ${selectedPatient.name} added to Awaiting Arrival at ${counterName}`);
+          closeManualAddModal();
+          deselectPatient();
+          return;
+        }
+
+        const queueRef = db.ref(`establishments/${estId}/counters/${counterId}/queue`);
+        const newQueueKey = queueRef.push().key;
+
+        // Calculate position based on current waiting entries
+        const queueAllSnap = await queueRef.once("value");
+        let position = 1;
+        if (queueAllSnap.exists()) {
+          let waitingCount = 0;
+          queueAllSnap.forEach(child => {
+            const v = child.val() || {};
+            if (v.status === "waiting") waitingCount++;
+          });
+          position = waitingCount + 1;
+        }
+
+        const queueEntry = {
+          uid: selectedPatient.uid,
+          name: selectedPatient.name,
+          patientName: selectedPatient.name,
+          email: selectedPatient.email,
+          contactNumber: selectedPatient.contactNumber,
+          address: selectedPatient.address,
+          status: "waiting",
+          joinTime: now,
+          serviceStartTime: null,
+          serviceEndTime: null,
+          reason: "Manual Queue Entry",
+          position: position
+        };
+
+        const updates = {};
+        // SIMULATION MODE: Always set arrivalIndex for RFID gate control
+        const awaitingKey = db.ref().push().key; // provide a flat awaitingKey for ESP32
+        updates[`arrivalIndex/${selectedPatient.uid}`] = {
+          uid: selectedPatient.uid,
+          counterId: counterId,
+          estId: estId,
+          establishmentId: estId,
+          awaitingKey: awaitingKey,
+          status: "awaiting_arrival",
+          createdAt: firebase.database.ServerValue.TIMESTAMP
+        };
+        updates[`establishments/${estId}/counters/${counterId}/queue/${newQueueKey}`] = queueEntry;
+        updates[`patients/${selectedPatient.uid}/queueStatus`] = {
+          status: "waiting",
+          estId,
+          estName,
+          counterId,
+          counterName,
+          queueKey: newQueueKey,
+          position,
+          timestamp: now
+        };
+        updates[`patients/${selectedPatient.uid}/activeQueues/${newQueueKey}`] = queueEntry;
+        const notifKey = db.ref(`patients/${selectedPatient.uid}/notifications`).push().key;
+        updates[`patients/${selectedPatient.uid}/notifications/${notifKey}`] = {
+          type: "queue",
+          estId,
+          estName,
+          counterId,
+          counterName,
+          message: `You have been added to the queue at ${counterName}.`,
+          position,
+          timestamp: now
+        };
+        await db.ref().update(updates);
+
+        alert(`✅ ${selectedPatient.name} has been added to ${counterName} (Position: ${position})`);
+        closeManualAddModal();
+        deselectPatient();
+      } catch (error) {
+        console.error("Error adding patient to queue:", error);
+        alert("❌ Error adding patient to queue: " + error.message);
+      } finally {
+        modalConfirmBtn.disabled = false;
+      }
+    };
+
+    // Close modal when clicking outside
+    manualAddModal.addEventListener("click", (e) => {
+      if (e.target === manualAddModal) {
+        closeManualAddModal();
+      }
+    });
+
+    /* ============================================================================
+       RFID ASSIGNMENT FEATURE
+       ============================================================================ */
+
+    const rfidModal = document.getElementById("rfidModal");
+    const rfidModalCloseBtn = document.getElementById("rfidModalCloseBtn");
+    const rfidModalCancelBtn = document.getElementById("rfidModalCancelBtn");
+    const rfidModalConfirmBtn = document.getElementById("rfidModalConfirmBtn");
+    const rfidInput = document.getElementById("rfidInput");
+    const rfidWarning = document.getElementById("rfidWarning");
+    const rfidExistingPatient = document.getElementById("rfidExistingPatient");
+    const rfidModalPatientName = document.getElementById("rfidModalPatientName");
+
+    let rfidAssignmentData = {
+      patientId: null,
+      patientName: null,
+      rfidUid: null,
+      existingPatientId: null
+    };
+
+    document.getElementById("btnAssignRFID").onclick = () => {
+      if (!selectedPatient) return;
+      openRFIDModal(selectedPatient);
+    };
+
+    function openRFIDModal(patient) {
+      rfidAssignmentData.patientId = patient.uid;
+      rfidAssignmentData.patientName = patient.name;
+      rfidAssignmentData.rfidUid = null;
+      rfidAssignmentData.existingPatientId = null;
+
+      rfidModalPatientName.textContent = patient.name || "Unknown Patient";
+      rfidInput.value = "";
+      rfidInput.focus();
+      rfidWarning.style.display = "none";
+      rfidModalConfirmBtn.textContent = "Assign RFID";
+      rfidModalConfirmBtn.disabled = false;
+
+      rfidModal.classList.add("active");
+    }
+
+    function closeRFIDModal() {
+      rfidModal.classList.remove("active");
+      rfidInput.value = "";
+      rfidAssignmentData = {
+        patientId: null,
+        patientName: null,
+        rfidUid: null,
+        existingPatientId: null
+      };
+    }
+
+    rfidModalCloseBtn.onclick = closeRFIDModal;
+    rfidModalCancelBtn.onclick = closeRFIDModal;
+
+    // Auto-focus input when modal opens
+    rfidModal.addEventListener("click", (e) => {
+      if (e.target === rfidModal) {
+        closeRFIDModal();
+      }
+    });
+
+    // Real-time RFID scanning/input handling
+    rfidInput.addEventListener("change", async () => {
+      const rfidUid = rfidInput.value.trim();
+      if (!rfidUid) {
+        rfidWarning.style.display = "none";
+        rfidModalConfirmBtn.disabled = true;
+        return;
+      }
+
+      rfidAssignmentData.rfidUid = rfidUid;
+
+      // Check if RFID already exists
+      try {
+        const rfidSnapshot = await db.ref(`credentials/rfid/${rfidUid}`).once("value");
+
+        if (rfidSnapshot.exists()) {
+          const existingData = rfidSnapshot.val();
+          const existingPatientId = existingData.patientId;
+
+          rfidAssignmentData.existingPatientId = existingPatientId;
+
+          // Fetch the existing patient's name
+          const patientSnapshot = await db.ref(`patients/${existingPatientId}`).once("value");
+          const existingPatientName = patientSnapshot.exists() ? patientSnapshot.val().name : "Unknown Patient";
+
+          rfidExistingPatient.innerHTML = `Currently assigned to: <strong>${existingPatientName}</strong> (ID: ${existingPatientId})`;
+          rfidWarning.style.display = "block";
+          rfidModalConfirmBtn.textContent = "Overwrite & Assign";
+        } else {
+          rfidWarning.style.display = "none";
+          rfidModalConfirmBtn.textContent = "Assign RFID";
+        }
+
+        rfidModalConfirmBtn.disabled = false;
+      } catch (error) {
+        console.error("Error checking RFID:", error);
+        alert("Error checking RFID: " + error.message);
+        rfidModalConfirmBtn.disabled = true;
+      }
+    });
+
+    rfidModalConfirmBtn.onclick = async () => {
+      const rfidUid = rfidInput.value.trim();
+
+      if (!rfidUid) {
+        alert("Please enter or scan an RFID UID.");
+        return;
+      }
+
+      if (!rfidAssignmentData.patientId) {
+        alert("Patient ID is missing.");
+        return;
+      }
+
+      // If RFID exists and admin hasn't explicitly confirmed, ask for confirmation
+      if (rfidAssignmentData.existingPatientId && rfidAssignmentData.existingPatientId !== rfidAssignmentData.patientId) {
+        const confirmed = confirm(
+          `This RFID is already assigned to another patient.\n\n` +
+          `Current Patient: ${rfidAssignmentData.patientName}\n` +
+          `Existing RFID Assignment: ${rfidExistingPatient.textContent}\n\n` +
+          `Do you want to overwrite and reassign this RFID card?`
+        );
+
+        if (!confirmed) {
+          return;
+        }
+      }
+
+      try {
+        rfidModalConfirmBtn.disabled = true;
+        rfidModalConfirmBtn.textContent = "Assigning...";
+
+        // Write RFID credential to database
+        await db.ref(`credentials/rfid/${rfidUid}`).set({
+          patientId: rfidAssignmentData.patientId,
+          enabled: true
+        });
+
+        // Also store the RFID assignment in patient record for reference
+        await db.ref(`patients/${rfidAssignmentData.patientId}/rfidCardAssigned`).set({
+          rfidUid: rfidUid,
+          assignedAt: Date.now()
+        });
+
+        alert(`✅ RFID card successfully assigned to ${rfidAssignmentData.patientName}`);
+        closeRFIDModal();
+        deselectPatient();
+      } catch (error) {
+        console.error("Error assigning RFID:", error);
+        alert("❌ Error assigning RFID: " + error.message);
+        rfidModalConfirmBtn.disabled = false;
+        rfidModalConfirmBtn.textContent = rfidAssignmentData.existingPatientId ? "Overwrite & Assign" : "Assign RFID";
+      }
+    };
+
+    /* ============================================================================
+       RFID DISABLE FEATURE
+       ============================================================================ */
+
+    const disableRFIDModal = document.getElementById("disableRFIDModal");
+    const disableRFIDModalCloseBtn = document.getElementById("disableRFIDModalCloseBtn");
+    const disableRFIDModalCancelBtn = document.getElementById("disableRFIDModalCancelBtn");
+    const disableRFIDModalConfirmBtn = document.getElementById("disableRFIDModalConfirmBtn");
+    const disableRFIDPatientName = document.getElementById("disableRFIDPatientName");
+    const disableRFIDCardUID = document.getElementById("disableRFIDCardUID");
+    const disableRFIDCardStatus = document.getElementById("disableRFIDCardStatus");
+
+    let disableRFIDData = {
+      patientId: null,
+      patientName: null,
+      rfidUid: null,
+      isCurrentlyEnabled: true
+    };
+
+    document.getElementById("btnDisableRFID").onclick = () => {
+      if (!selectedPatient) return;
+      openDisableRFIDModal(selectedPatient);
+    };
+
+    async function openDisableRFIDModal(patient) {
+      disableRFIDData.patientId = patient.uid;
+      disableRFIDData.patientName = patient.name;
+      disableRFIDData.rfidUid = null;
+      disableRFIDData.isCurrentlyEnabled = true;
+
+      disableRFIDPatientName.textContent = patient.name || "Unknown Patient";
+      disableRFIDModalConfirmBtn.disabled = false;
+      disableRFIDModalConfirmBtn.textContent = "Disable RFID";
+
+      try {
+        // Fetch the patient's assigned RFID card
+        const rfidAssignmentSnapshot = await db.ref(`patients/${patient.uid}/rfidCardAssigned`).once("value");
+
+        if (!rfidAssignmentSnapshot.exists()) {
+          disableRFIDCardUID.textContent = "No RFID card assigned";
+          disableRFIDCardStatus.textContent = "Not Assigned";
+          disableRFIDCardStatus.style.color = "#6c757d";
+          disableRFIDModalConfirmBtn.disabled = true;
+          disableRFIDModalConfirmBtn.textContent = "No Card Available";
+        } else {
+          const assignmentData = rfidAssignmentSnapshot.val();
+          const rfidUid = assignmentData.rfidUid;
+          disableRFIDData.rfidUid = rfidUid;
+
+          disableRFIDCardUID.textContent = rfidUid;
+
+          // Check the current status of the RFID credential
+          const rfidSnapshot = await db.ref(`credentials/rfid/${rfidUid}`).once("value");
+
+          if (rfidSnapshot.exists()) {
+            const rfidData = rfidSnapshot.val();
+            const isEnabled = rfidData.enabled !== false;
+            disableRFIDData.isCurrentlyEnabled = isEnabled;
+
+            if (isEnabled) {
+              disableRFIDCardStatus.textContent = "Enabled ✓";
+              disableRFIDCardStatus.style.color = "#28a745";
+              disableRFIDModalConfirmBtn.disabled = false;
+              disableRFIDModalConfirmBtn.textContent = "🚫 Disable RFID";
+            } else {
+              disableRFIDCardStatus.textContent = "Disabled ✗";
+              disableRFIDCardStatus.style.color = "#dc3545";
+              disableRFIDModalConfirmBtn.disabled = false;
+              disableRFIDModalConfirmBtn.textContent = "✅ Enable RFID";
+            }
+          } else {
+            disableRFIDCardUID.textContent = rfidUid + " (Missing in DB)";
+            disableRFIDCardStatus.textContent = "Invalid";
+            disableRFIDCardStatus.style.color = "#dc3545";
+            disableRFIDModalConfirmBtn.disabled = true;
+            disableRFIDModalConfirmBtn.textContent = "Card Not Found";
+          }
+        }
+
+        disableRFIDModal.classList.add("active");
+      } catch (error) {
+        console.error("Error opening disable RFID modal:", error);
+        alert("Error loading RFID information: " + error.message);
+      }
+    }
+
+    function closeDisableRFIDModal() {
+      disableRFIDModal.classList.remove("active");
+      disableRFIDData = {
+        patientId: null,
+        patientName: null,
+        rfidUid: null
+      };
+    }
+
+    disableRFIDModalCloseBtn.onclick = closeDisableRFIDModal;
+    disableRFIDModalCancelBtn.onclick = closeDisableRFIDModal;
+
+    // Close modal when clicking outside
+    disableRFIDModal.addEventListener("click", (e) => {
+      if (e.target === disableRFIDModal) {
+        closeDisableRFIDModal();
+      }
+    });
+
+    disableRFIDModalConfirmBtn.onclick = async () => {
+      if (!disableRFIDData.rfidUid) {
+        alert("No RFID card to manage.");
+        return;
+      }
+
+      if (!disableRFIDData.patientId) {
+        alert("Patient ID is missing.");
+        return;
+      }
+
+      const isEnabling = !disableRFIDData.isCurrentlyEnabled;
+      const actionText = isEnabling ? "Enable" : "Disable";
+      const actionVerb = isEnabling ? "re-enable" : "disable";
+      const statusMessage = isEnabling ? "marked as active" : "marked as inactive";
+
+      // Confirm the action
+      const confirmed = confirm(
+        `⚠️ ${actionText} RFID Card?\n\n` +
+        `Patient: ${disableRFIDData.patientName}\n` +
+        `Card UID: ${disableRFIDData.rfidUid}\n\n` +
+        `This card will be ${statusMessage}.\n` +
+        `The record will be preserved in the system.`
+      );
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        disableRFIDModalConfirmBtn.disabled = true;
+        disableRFIDModalConfirmBtn.textContent = `${actionText}ing...`;
+
+        // Update RFID credential to set enabled: true or false
+        await db.ref(`credentials/rfid/${disableRFIDData.rfidUid}`).update({
+          enabled: isEnabling
+        });
+
+        alert(`✅ RFID card successfully ${actionVerb}d.\n\nCard: ${disableRFIDData.rfidUid}\nPatient: ${disableRFIDData.patientName}\n\nThe card record is preserved in the system.`);
+        closeDisableRFIDModal();
+        deselectPatient();
+      } catch (error) {
+        console.error(`Error ${actionVerb}ing RFID:`, error);
+        alert(`❌ Error ${actionVerb}ing RFID: ` + error.message);
+        disableRFIDModalConfirmBtn.disabled = false;
+        disableRFIDModalConfirmBtn.textContent = isEnabling ? "✅ Enable RFID" : "🚫 Disable RFID";
+      }
+    };
+
+  </script>
+</body>
+</html>

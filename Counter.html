@@ -1,0 +1,2702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Q-Now | Counter Management</title>
+
+    <style>
+        /* =========================
+           Theme Variables
+           ========================= */
+        :root {
+            --primary: #0077cc;
+            --primary-dark: #005fa3;
+            --accent: #00aaff;
+            --light-bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --radius: 10px;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            --text: #333;
+            --text-light: #555;
+            --transition: all 0.25s ease;
+        }
+
+        /* =========================
+           Global Styles
+           ========================= */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--light-bg);
+            color: var(--text);
+            animation: fadeInBody 0.6s ease;
+            padding-top: 65px;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            animation: slideDown 0.6s ease;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            width: 100%;
+            box-sizing: border-box;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 600;
+            flex: 0 0 auto;
+        }
+
+        header .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+
+        header #counterDetails {
+            color: white;
+            text-align: right;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: var(--transition);
+            padding: 8px 12px;
+            white-space: nowrap;
+        }
+
+        .back-btn:hover {
+            color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        /* =========================
+           Main Content
+           ========================= */
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            animation: fadeUp 0.7s ease;
+        }
+
+        h2 {
+            color: var(--primary-dark);
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        h2:first-of-type {
+            margin-top: 0;
+        }
+
+        .queue-item {
+            background: #f9fbff;
+            padding: 12px 15px;
+            border: 1px solid #e0e7ef;
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            transition: var(--transition);
+        }
+
+        .queue-item:hover {
+            background: #f0f8ff;
+            transform: translateY(-2px);
+        }
+
+        .queue-item b {
+            color: var(--primary-dark);
+            font-size: 1.05rem;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            padding: 10px 16px;
+            margin: 6px 4px 6px 0;
+            font-weight: 600;
+            transition: var(--transition);
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .next { background: #28a745; color: #fff; }
+        .next:hover { background: #218838; }
+        
+        .reject { background: #dc3545; color: #fff; }
+        .reject:hover { background: #c82333; }
+        
+        .toggle { background: var(--primary); color: #fff; }
+        .toggle:hover { background: var(--primary-dark); }
+        
+        .accept { background: #17a2b8; color: #fff; }
+        .accept:hover { background: #138496; }
+        
+        .end { background: #ffc107; color: #000; }
+        .end:hover { background: #e0a800; }
+
+        .small {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        #customerInfo {
+            background: #f9fbff;
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid #e0e7ef;
+            margin: 1rem 0;
+        }
+
+        #customerInfo h3 {
+            color: var(--primary-dark);
+            margin-top: 0;
+        }
+
+        #customerInfo p {
+            margin: 8px 0;
+            color: var(--text);
+        }
+
+        #customerInfo strong {
+            color: var(--primary-dark);
+        }
+
+        /* =========================
+           Animations
+           ========================= */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInBody {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* =========================
+           Collapsible Sections
+           ========================= */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary-dark);
+            color: white;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            margin-top: 1.5rem;
+            margin-bottom: 0;
+            transition: var(--transition);
+            user-select: none;
+        }
+
+        .section-header:hover {
+            background: #004a80;
+            transform: translateY(-1px);
+        }
+
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-toggle {
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+
+        .section-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .section-content {
+            background: #f9fbff;
+            border: 1px solid #e0e7ef;
+            border-top: none;
+            border-bottom-left-radius: var(--radius);
+            border-bottom-right-radius: var(--radius);
+            padding: 16px;
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .section-content.collapsed {
+            max-height: 0;
+            padding: 0 16px;
+            overflow: hidden;
+        }
+
+        .section-empty {
+            color: var(--text-light);
+            font-style: italic;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .section-count {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* =========================
+           Current Customer Section
+           ========================= */
+        .current-customer-section {
+            background: linear-gradient(135deg, #e8f4f8 0%, #f0f8ff 100%);
+            border: 2px solid var(--primary);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 2rem;
+            animation: fadeUp 0.6s ease;
+        }
+
+        .current-customer-section h2 {
+            margin-top: 0;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+        }
+
+        .current-customer-section #customerInfo {
+            background: white;
+            border: 1px solid var(--primary);
+            margin: 1rem 0 0 0;
+        }
+
+        .current-customer-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .current-customer-actions .btn {
+            margin: 0;
+            flex: 1;
+            min-width: 150px;
+        }
+
+        /* =========================
+           Patient Info Card (Clickable)
+           ========================= */
+        .patient-info-card {
+            background: linear-gradient(135deg, #e8f4f8 0%, #f0f8ff 100%);
+            border: 2px solid var(--primary);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-top: 2rem;
+            animation: fadeUp 0.6s ease;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .patient-info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 119, 204, 0.2);
+        }
+
+        .patient-info-card h3 {
+            margin: 0 0 12px 0;
+            color: var(--primary-dark);
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .patient-info-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .patient-info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .patient-info-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .patient-info-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .patient-info-card .open-profile {
+            font-size: 0.75rem;
+            color: var(--primary);
+            margin-top: 8px;
+            opacity: 0.7;
+        }
+
+        .accepting-toggle-container {
+            margin-top: 2rem;
+            padding: 16px;
+            background: var(--light-bg);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toggle-label {
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-checkbox {
+            width: 50px;
+            height: 28px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .toggle-checkbox input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.3s;
+            border-radius: 28px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-checkbox input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        .toggle-checkbox input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+
+        .toggle-status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            margin-left: 12px;
+        }
+
+        .toggle-status.open {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .toggle-status.closed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        /* Notifications */
+        .notif-container{ position:relative; margin-left:6px; }
+        .notif-bell{ cursor:pointer; position:relative; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:500; }
+        .notif-badge{ position:absolute; top:-6px; right:-8px; background:#ff3b30; color:#fff; border-radius:10px; padding:0 6px; font-size:0.7rem; display:none; }
+        .notif-panel{ position:absolute; right:0; top:28px; width:320px; max-height:360px; overflow:auto; background:#fff; color:#333; border:1px solid #ddd; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.15); display:none; z-index:1200; }
+        .notif-item{ padding:10px 12px; border-bottom:1px solid #eee; cursor:pointer; transition:background 0.2s, opacity 0.2s; }
+        .notif-item.unread{ background:#f5faff; }
+        .notif-item.read{ opacity:0.75; }
+        .notif-item.new-open{ background:#e6f0ff; }
+        .notif-item:last-child{ border-bottom:none; }
+        .notif-title{ font-weight:600; font-size:0.9rem; }
+        .notif-meta{ font-size:0.8rem; color:#666; }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1 id="counterName">Counter</h1>
+        <div class="header-actions">
+            <div class="notif-container" id="notifContainer">
+                <span class="notif-bell" id="notifBell" title="Notifications">🔔
+                    <span class="notif-badge" id="notifBadge">0</span>
+                </span>
+                <div class="notif-panel" id="notifPanel">
+                    <div class="notif-item"><span class="notif-meta">No notifications yet</span></div>
+                </div>
+            </div>
+            <div id="counterDetails">
+                <div id="counterLocation"></div>
+                <div id="counterPriority"></div>
+            </div>
+            <button class="back-btn" onclick="history.back()">← Back</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- =========================
+             Patient Info Card (Clickable)
+             ========================= -->
+        <div class="patient-info-card" id="patientInfoCard" style="display: none;">
+            <h3>👤 Currently Being Served</h3>
+            <div class="patient-info-details">
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Name</span>
+                    <span class="patient-info-value" id="patientInfoName">-</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Age</span>
+                    <span class="patient-info-value" id="patientInfoAge">-</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Reason</span>
+                    <span class="patient-info-value" id="patientInfoReason">-</span>
+                </div>
+                <div class="patient-info-item">
+                    <span class="patient-info-label">Special Conditions</span>
+                    <span class="patient-info-value" id="patientInfoConditions">None</span>
+                </div>
+            </div>
+            <div class="patient-info-card .open-profile">👆 Click to view full details</div>
+        </div>
+
+        <!-- =========================
+             Accepting Toggle
+             ========================= -->
+        <div class="accepting-toggle-container">
+            <label class="toggle-label">
+                <span>🔔 Accepting Customers</span>
+                <div class="toggle-checkbox">
+                    <input type="checkbox" id="acceptToggle" />
+                    <span class="toggle-slider"></span>
+                </div>
+            </label>
+            <span class="toggle-status" id="toggleStatus">Offline</span>
+        </div>
+
+        <!-- =========================
+             Requests Section
+             ========================= -->
+        <div>
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>
+                    📋 Queue Requests
+                    <span class="section-count" id="requestsCount">0</span>
+                </h2>
+                <span class="section-toggle"></span>
+            </div>
+            <div class="section-content">
+                <div id="requestsList">
+                    <div class="section-empty">No requests yet</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================
+             Awaiting Arrival Section
+             ========================= -->
+        <div>
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>
+                    🚗 Awaiting Arrival
+                    <span class="section-count" id="awaitingArrivalCount">0</span>
+                </h2>
+                <span class="section-toggle"></span>
+            </div>
+            <div class="section-content">
+                <div id="awaitingArrivalList">
+                    <div class="section-empty">No patients awaiting arrival</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =========================
+             Queue (Waiting) Section
+             ========================= -->
+        <div>
+            <div class="section-header" onclick="toggleSection(this)">
+                <h2>
+                    ⏳ Queue (Waiting)
+                    <span class="section-count" id="queueCount">0</span>
+                </h2>
+                <span class="section-toggle"></span>
+            </div>
+            <div class="section-content">
+                <div id="queueList">
+                    <div class="section-empty">No one waiting</div>
+                </div>
+            </div>
+        </div>
+
+        
+
+        <!-- =========================
+             Counter Controls
+             ========================= -->
+        <h2 style="margin-top: 2rem;">Counter Controls</h2>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn next" id="btnNext">➤ Admit Next</button>
+            <button class="btn end" id="btnEndService" style="display: none;">✓ End Service</button>
+            <button class="btn reject" id="btnNoShow" style="display: none;">⚠ Report as no-show</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        /* =========================
+           Collapsible Sections
+           ========================= */
+        function toggleSection(header) {
+            const content = header.nextElementSibling;
+            const toggle = header.querySelector(".section-toggle");
+
+            content.classList.toggle("collapsed");
+            toggle.classList.toggle("collapsed");
+        }
+
+        /* =========================
+           Update Section Counts
+           ========================= */
+        function updateSectionCount(elementId, count) {
+            const countEl = document.getElementById(elementId);
+            if (countEl) {
+                countEl.textContent = count;
+                countEl.style.display = count > 0 ? "inline-block" : "none";
+            }
+        }
+
+        /* =========================
+           Update Patient Info Card
+           ========================= */
+        function updatePatientInfoCard(data) {
+            if (!data) {
+                document.getElementById("patientInfoCard").style.display = "none";
+                return;
+            }
+
+            document.getElementById("patientInfoName").textContent = data.name || data.patientName || "-";
+            document.getElementById("patientInfoAge").textContent = data.age || "-";
+            document.getElementById("patientInfoReason").textContent = data.reason || "-";
+
+            let conditions = [];
+            if (data.pwd) conditions.push("PWD");
+            if (data.senior) conditions.push("Senior");
+            if (data.severecon) conditions.push("Severe");
+            document.getElementById("patientInfoConditions").textContent = conditions.length > 0 ? conditions.join(", ") : "None";
+
+            document.getElementById("patientInfoCard").style.display = "block";
+        }
+
+        /* =========================
+           Open Patient Detail Page
+           ========================= */
+        function openPatientDetail(uid) {
+            if (!uid) {
+                alert("Cannot open patient details for guest users.");
+                return;
+            }
+            window.open(`Patient_Detail.html?uid=${uid}`, "_blank");
+        }
+
+        /* =========================
+           NOTIFICATION HELPER FUNCTIONS
+           ========================= */
+        
+        /**
+         * Push arrival update notification to Firestore
+         * Used when: accepting request (awaiting_arrival), patient arrives (in_service), chain steps
+         */
+        async function pushArrivalNotification(uid, data) {
+            if (!uid || !firestore) return;
+            
+            try {
+                const notifData = {
+                    estId: data.estId || "",
+                    estName: data.estName || "",
+                    counterId: data.counterId || "",
+                    counterName: data.counterName || "",
+                    type: "arrival_update",
+                    status: data.status || "awaiting_arrival",  // "awaiting_arrival", "waiting", "in_service"
+                    message: data.message || "",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    chainOrder: data.chainOrder || 0,
+                    redirectUrl: (data.estId && data.counterId) ? `Counter.html?estId=${encodeURIComponent(data.estId)}&counterId=${encodeURIComponent(data.counterId)}` : "Live_Queue.html"
+                };
+                
+                await firestore.collection("patients").doc(uid).collection("inbox").add(notifData);
+                console.log(`✅ Pushed arrival notification to patient ${uid}:`, notifData);
+            } catch (err) {
+                console.error(`❌ Error pushing arrival notification:`, err);
+            }
+        }
+
+        /**
+         * Push appointment notification to Firestore
+         * Used when: appointment accepted, rejected, rescheduled, etc.
+         */
+        async function pushAppointmentNotification(uid, data) {
+            if (!uid || !firestore) return;
+            
+            try {
+                const notifData = {
+                    estId: data.estId || "",
+                    estName: data.estName || "",
+                    type: "appointment",
+                    status: data.status || "accepted",  // "accepted", "rejected", "rescheduled", "completed"
+                    service: data.service || "",
+                    message: data.message || "",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    redirectUrl: "Appointments.html"
+                };
+                
+                await firestore.collection("patients").doc(uid).collection("inbox").add(notifData);
+                console.log(`✅ Pushed appointment notification to patient ${uid}:`, notifData);
+            } catch (err) {
+                console.error(`❌ Error pushing appointment notification:`, err);
+            }
+        }
+
+        /**
+         * Push generic info notification to Firestore
+         * Fallback for other types of notifications
+         */
+        async function pushInfoNotification(uid, data) {
+            if (!uid || !firestore) return;
+            
+            try {
+                const notifData = {
+                    estId: data.estId || "",
+                    estName: data.estName || "",
+                    type: data.type || "info",
+                    message: data.message || "",
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    redirectUrl: data.redirectUrl || (data.estId ? "Appointments.html" : "Q-Now.html")
+                };
+                
+                await firestore.collection("patients").doc(uid).collection("inbox").add(notifData);
+                console.log(`✅ Pushed info notification to patient ${uid}:`, notifData);
+            } catch (err) {
+                console.error(`❌ Error pushing info notification:`, err);
+            }
+        }
+
+/* ------------------------ FIREBASE CONFIG ------------------------ */
+
+const firebaseConfig = {
+    apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+    authDomain: "q-now-7d98a.firebaseapp.com",
+    databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+    projectId: "q-now-7d98a",
+    storageBucket: "q-now-7d98a.firebasestorage.app",
+    messagingSenderId: "72096271594",
+    appId: "1:72096271594:web:b86777a11af444aac49b93"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.database();
+const auth = firebase.auth();
+const firestore = firebase.firestore();
+// Simulation Mode flag for demo behavior simplification
+const SIMULATION_MODE = true;
+
+/* ------------------------ URL PARAMETERS ------------------------ */
+
+const urlParams = new URLSearchParams(window.location.search);
+const estId = urlParams.get("estId");
+const counterId = urlParams.get("counterId");
+
+/* ------------------------ NOTIFICATIONS ------------------------ */
+const notifBell = document.getElementById("notifBell");
+const notifPanel = document.getElementById("notifPanel");
+const notifBadge = document.getElementById("notifBadge");
+let notifications = [];
+const READ_STORAGE_KEY = "qnow_notif_read";
+let readKeys = {};
+try{ readKeys = JSON.parse(localStorage.getItem(READ_STORAGE_KEY)||"{}"); }catch(_){ readKeys={}; }
+let justOpenedKeys = new Set();
+const seen = { resched:new Set(), cancel:new Set(), queue:new Set(), arrival:new Set(), due:new Set() };
+const estNameCache = {}; const patientNameCache = {};
+notifBell?.addEventListener("click", (e)=>{
+    e.stopPropagation();
+    const opening = !(notifPanel.style.display==="block");
+    notifPanel.style.display = opening ? "block" : "none";
+    if (opening) {
+        justOpenedKeys = new Set();
+        notifications.forEach(n=>{
+            const k=notifKey(n);
+            if(!readKeys[k]) { justOpenedKeys.add(k); }
+            readKeys[k]=true; n.read=true;
+        });
+        try{ localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys)); }catch(_){}
+        updateNotifUI();
+    }
+});
+document.addEventListener("click", ()=>{ if(notifPanel){ notifPanel.style.display="none"; justOpenedKeys = new Set(); updateNotifUI(); } });
+function notifKey(n){
+    if (n && n.key) return [n.type||"", n.estId||"", n.counterId||"", n.key].join("|");
+    return [n.type||"", n.estId||"", n.counterId||"", n.title||"", n.meta||""].join("|");
+}
+function resolveEstName(eid, cb){
+    if(estNameCache[eid]) return cb(estNameCache[eid]);
+    db.ref(`establishments/${eid}/companyName`).once("value").then(s=>{ if(s.exists()){ estNameCache[eid]=s.val(); cb(s.val()); } else { db.ref(`establishments/${eid}/name`).once("value").then(s2=>{ const nm=s2.exists()?s2.val():"Establishment"; estNameCache[eid]=nm; cb(nm); }); } });
+}
+function resolvePatientName(uid, cb){
+    if(patientNameCache[uid]) return cb(patientNameCache[uid]);
+    db.ref(`patients/${uid}/name`).once("value").then(s=>{ const nm=s.exists()?s.val():"Patient"; patientNameCache[uid]=nm; cb(nm); });
+}
+function updateNotifUI(){
+    // apply read flags and sort latest first
+    notifications.forEach(n=>{ const k=notifKey(n); if(readKeys[k]) n.read = true; });
+    const sorted = notifications.slice().sort((a,b)=> (b.ts||0) - (a.ts||0));
+    const list = sorted.slice(0,50);
+    notifPanel.innerHTML = list.length ? list.map((n,i)=>{
+        const k = notifKey(n);
+        const cls = n.read ? (justOpenedKeys.has(k) ? "new-open" : "read") : "unread";
+        return `<div class="notif-item ${cls}" data-idx="${i}" data-type="${n.type||''}" data-est="${n.estId||''}" data-counter="${n.counterId||''}" data-redirect="${n.redirectUrl||''}"><div class="notif-title">${n.title}</div><div class="notif-meta">${n.meta||""}</div><div>${n.msg||""}</div></div>`;
+    }).join("") : `<div class="notif-item"><span class="notif-meta">No notifications</span></div>`;
+    const unread = notifications.filter(n=>!n.read).length;
+    notifBadge.textContent = String(unread);
+    notifBadge.style.display = unread ? "inline-block" : "none";
+    notifPanel.querySelectorAll(".notif-item[data-idx]").forEach(el=>{
+        el.addEventListener("click", ()=>{
+            const redirect = el.getAttribute("data-redirect")||"";
+            const t = el.getAttribute("data-type")||"";
+            const eId = el.getAttribute("data-est")||"";
+            const cId = el.getAttribute("data-counter")||"";
+            // mark read
+            const idx = Number(el.getAttribute("data-idx"));
+            const itm = sorted[idx];
+            if(itm){ const k = notifKey(itm); readKeys[k]=true; try{ localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys)); }catch(_){ } itm.read=true; updateNotifUI(); }
+            if(redirect){ window.location.href = redirect; return; }
+            if(t==="queue"||t==="arrival"){
+                if(eId&&cId) window.location.href = `Counter.html?estId=${encodeURIComponent(eId)}&counterId=${encodeURIComponent(cId)}`;
+                else window.location.href = "Live_Queue.html";
+            } else {
+                window.location.href = "Appointments.html";
+            }
+        });
+    });
+}
+function startNotifForEst(eid){
+    if(!eid) return;
+    db.ref(`establishments/${eid}/rescheduleRequests`).on("value", snap=>{
+        snap.forEach(rs=>{
+            const v=rs.val(); const key=`${eid}|resched|${rs.key}`;
+            if(v && v.status==="pending" && !seen.resched.has(key)){
+                seen.resched.add(key);
+                const item={key: rs.key, type:"reschedule", estId:eid, title:"Appointment Reschedule", meta:"Loading...", msg:"Reschedule requested", ts:Date.now()};
+                notifications.unshift(item);
+                resolveEstName(eid, n=>{ item.meta=n; updateNotifUI(); });
+                db.ref(`establishments/${eid}/appointments/${rs.key}`).once("value").then(ap=>{
+                    if(ap.exists()){ const a=ap.val(); const pid=a?.patientId; const pn=a?.patientName; if(pn){ item.msg=`Reschedule requested by ${pn}`; updateNotifUI(); } else if(pid){ resolvePatientName(pid,n=>{ item.msg=`Reschedule requested by ${n}`; updateNotifUI(); }); } }
+                });
+            }
+        }); updateNotifUI();
+    });
+    db.ref(`establishments/${eid}/appointments`).on("value", snap=>{
+        snap.forEach(as=>{ const a=as.val(); if(a && a.status==="cancelled" && a.cancelledAt){ const key=`${eid}|cancel|${as.key}`; if(!seen.cancel.has(key)){ seen.cancel.add(key); const item={key: as.key, type:"cancel", estId:eid, title:"Appointment Cancelled", meta:`${a.patientName||"Patient"}`, msg:`${a.service||"-"}`, ts:a.cancelledAt}; notifications.unshift(item); resolveEstName(eid, n=>{ item.meta=`${a.patientName||"Patient"} — ${n}`; updateNotifUI(); }); } } }); updateNotifUI();
+    });
+    db.ref(`establishments/${eid}/counters`).on("value", snap=>{
+        snap.forEach(cSnap=>{ const cId=cSnap.key; const counterName=(cSnap.val()&&cSnap.val().name)||cId; const reqSnap=cSnap.child("requests"); if(!reqSnap.exists()) return; reqSnap.forEach(r=>{ const req=r.val(); if(req && req.status==="pending"){ const key=`${eid}|queue|${cId}|${r.key}`; if(!seen.queue.has(key)){ seen.queue.add(key); const pname=req.patientName||"Unknown"; const item={key: r.key, type:"queue", estId:eid, counterId:cId, title:"Queue Request", meta:`${counterName}`, msg:`From ${pname}`, ts:req.createdAt||Date.now()}; notifications.unshift(item); resolveEstName(eid, n=>{ item.meta=`${n} — ${counterName}`; updateNotifUI(); }); } } }); }); updateNotifUI();
+    });
+    db.ref(`establishments/${eid}/arrivals`).on("value", snap=>{
+        snap.forEach(a=>{ const v=a.val(); const key=`${eid}|arrival|${a.key}`; if(v && !seen.arrival.has(key)){ seen.arrival.add(key); const item={key: a.key, type:"arrival", estId:eid, title:"Patient Arrived", meta:"Loading...", msg:"Arrival verified", ts:v.timestamp||Date.now()}; notifications.unshift(item); resolveEstName(eid, n=>{ item.meta=n; updateNotifUI(); }); if(v.uid){ resolvePatientName(v.uid, n=>{ item.msg=`${n} has arrived`; updateNotifUI(); }); } } }); updateNotifUI();
+    });
+}
+
+/* ------------------------ AUTH CHECK ------------------------ */
+
+auth.onAuthStateChanged(user => {
+    if (!user) {
+        alert("Please log in first.");
+        return;
+    }
+    // Start notifications for all owned establishments (for parity with other pages)
+    db.ref("establishments").once("value").then(snap=>{
+        notifications = [];
+        if(snap.exists()){
+            snap.forEach(estSnap=>{
+                const est = estSnap.val();
+                const eid = estSnap.key;
+                if ((est.ownerId || est.uid || est.createdBy) === user.uid) {
+                    startNotifForEst(eid);
+                }
+            });
+        }
+        // Always include current est if present
+        if (estId) startNotifForEst(estId);
+    });
+    initCounterPage();
+});
+
+function initCounterPage() {
+
+    // Detach any existing listeners to prevent duplicates
+    db.ref(`establishments/${estId}/counters/${counterId}/requests`).off();
+    db.ref(`establishments/${estId}/counters/${counterId}/awaitingArrival`).off();
+    db.ref(`establishments/${estId}/counters/${counterId}/queue`).off();
+    db.ref(`establishments/${estId}`).off();
+    db.ref(`establishments/${estId}/arrivals`).off();
+    db.ref(`establishments/${estId}/counters/${counterId}`).off();
+    // Critical: also detach arrivalIndex listeners to avoid double rendering
+    db.ref("arrivalIndex").off();
+
+    const counterRef = db.ref(`establishments/${estId}/counters/${counterId}`);
+    const requestsRef = counterRef.child("requests");
+    const queueRef = counterRef.child("queue");
+    const acceptingRef = counterRef.child("accepting");
+
+    const patientsRef = db.ref("patients");
+    const estRef = db.ref(`establishments/${estId}`);
+
+    const requestsList = document.getElementById("requestsList");
+    const awaitingArrivalList = document.getElementById("awaitingArrivalList");
+    const queueList = document.getElementById("queueList");
+    const patientInfoCard = document.getElementById("patientInfoCard");
+
+    const btnNext = document.getElementById("btnNext");
+    const btnEndService = document.getElementById("btnEndService");
+    const acceptToggle = document.getElementById("acceptToggle");
+    const btnNoShow = document.getElementById("btnNoShow");
+    const toggleStatus = document.getElementById("toggleStatus");
+
+    const counterNameEl = document.getElementById("counterName");
+
+    let currentCustomerKey = null;
+    let currentCustomerData = null;
+
+    /* ------------------ Load Establishment + Counter Name ------------------ */
+
+    estRef.child("companyName").once("value").then(estSnap => {
+        const estName = estSnap.val() || "Establishment";
+
+        counterRef.child("name").once("value").then(cSnap => {
+            const cName = cSnap.val() || "Counter";
+            counterNameEl.textContent = `${estName} - ${cName}`;
+        });
+    });
+
+    /* =========================================================================
+   =====================  ACCEPTING REQUESTS TOGGLE  =========================
+   ========================================================================== */
+
+    acceptToggle.addEventListener("change", () => {
+        const val = acceptToggle.checked;
+        counterRef.update({ accepting: val });
+    });
+
+    counterRef.on("value", snap => {
+        if (!snap.exists()) return;
+        
+        const counterData = snap.val();
+        const isAccepting = counterData.accepting === true;
+        
+        acceptToggle.checked = isAccepting;
+        toggleStatus.textContent = isAccepting ? "🟢 Online" : "🔴 Offline";
+        toggleStatus.className = isAccepting ? "toggle-status open" : "toggle-status closed";
+    });
+
+    /* ------------------------------- LOAD REQUESTS -------------------------------- */
+
+    requestsRef.on("value", snap => {
+
+        requestsList.innerHTML = "";
+        let requestCount = 0;
+
+        if (!snap.exists()) {
+            requestsList.innerHTML = "<div class=\"section-empty\">No requests yet</div>";
+            updateSectionCount("requestsCount", 0);
+            return;
+        }
+
+        snap.forEach(reqSnap => {
+
+            const reqId = reqSnap.key;
+            const reqData = reqSnap.val() || {};
+            // Only show pending requests
+            if (reqData.status && reqData.status !== "pending") return;
+            requestCount++;
+
+            reqData.requestKey = reqId;
+
+            const div = document.createElement("div");
+            div.className = "queue-item";
+            div.innerHTML = `
+                <b>${reqData.patientName || "Unknown"}</b><br>
+                <span class="small">Reason: ${reqData.reason || "-"}</span>
+            `;
+
+            const btnAccept = document.createElement("button");
+            btnAccept.className = "btn accept";
+            btnAccept.textContent = "Accept";
+
+            const btnRejectReq = document.createElement("button");
+            btnRejectReq.className = "btn reject";
+            btnRejectReq.textContent = "Reject";
+
+            div.appendChild(btnAccept);
+            div.appendChild(btnRejectReq);
+            requestsList.appendChild(div);
+
+            /* ------------------------------ ACCEPT REQUEST ------------------------------ */
+
+            btnAccept.onclick = async (e) => {
+                e?.preventDefault?.();
+                e?.stopPropagation?.();
+                btnAccept.disabled = true;
+                btnRejectReq.disabled = true;
+
+                /*
+                  NEW BEHAVIOR (arrivalIndex pattern):
+                  - Check /arrivalIndex/{uid} to see if patient already has an active authorization
+                  - If NO arrivalIndex exists: create it (patient's first queue, will arrive via hardware)
+                  - If arrivalIndex exists: mark request with chainOrder = nextChainOrder (queued for chain progression)
+                  - End Service chain logic will UPDATE arrivalIndex to next chainOrder request, or DELETE if last
+                */
+
+                let hasActiveArrival = false;
+                let currentChainOrder = 0;
+
+                try {
+                    if (reqData.uid) {
+                        try {
+                            const arrivalIndexSnap = await db.ref(`arrivalIndex/${reqData.uid}`).once("value");
+                            if (arrivalIndexSnap.exists()) {
+                                hasActiveArrival = true;
+                                const arrivalIndexData = arrivalIndexSnap.val();
+                                currentChainOrder = arrivalIndexData.chainOrder || 0;
+                                console.log(`Patient ${reqData.uid} has active arrivalIndex with chainOrder: ${currentChainOrder}`);
+                            }
+                        } catch (checkError) {
+                            console.error("Error checking arrivalIndex:", checkError);
+                            alert("Error checking patient status. Please try again.");
+                            return;
+                        }
+                    }
+
+                    const [estSnap, counterSnap] = await Promise.all([
+                        estRef.child("companyName").once("value"),
+                        counterRef.child("name").once("value")
+                    ]);
+
+                    const estName = estSnap.val() || "Unknown Establishment";
+                    const counterName = counterSnap.val() || "Unknown Counter";
+
+                    const now = Date.now();
+                    const updates = {};
+
+                    // Mark request as accepted (preserve for admin/history)
+                    updates[`establishments/${estId}/counters/${counterId}/requests/${reqId}/status`] = "accepted";
+                    updates[`establishments/${estId}/counters/${counterId}/requests/${reqId}/acceptedAt`] = now;
+
+                    // Prepare patient queueRequests update
+                    if (reqData.uid) {
+                        // Determine chainOrder: if patient already has arrival, this is next in chain
+                        let chainOrder = 0;
+                        if (hasActiveArrival) {
+                            chainOrder = currentChainOrder + 1;
+                        }
+
+                        // Mark this specific request as accepted with chainOrder
+                        updates[`patients/${reqData.uid}/queueRequests/${reqId}`] = {
+                            status: "accepted",
+                            estId,
+                            estName,
+                            counterId,
+                            counterName,
+                            reason: reqData.reason,
+                            chainOrder: chainOrder,
+                            acceptedAt: now
+                        };
+
+                        const notifKey = db.ref(`patients/${reqData.uid}/notifications`).push().key;
+                        updates[`patients/${reqData.uid}/notifications/${notifKey}`] = {
+                            type: "queue",
+                            estId,
+                            estName,
+                            counterId,
+                            counterName,
+                            message: hasActiveArrival ? "Request accepted — you will be queued after current service." : "Awaiting arrival",
+                            timestamp: now
+                        };
+                    }
+
+                    // Only create arrivalIndex if patient does NOT already have one
+                    if (!hasActiveArrival && reqData.uid) {
+                        updates[`arrivalIndex/${reqData.uid}`] = {
+                            uid: reqData.uid,
+                            counterId: counterId,
+                            estId: estId,
+                            requestKey: reqId,
+                            chainOrder: 0,
+                            status: "awaiting_arrival",
+                            createdAt: now
+                        };
+                        console.log(`✅ Creating arrivalIndex for patient ${reqData.uid}:`, {
+                            counterId: counterId,
+                            chainOrder: 0
+                        });
+                    } else if (hasActiveArrival && reqData.uid) {
+                        console.log(`⛓️ Chain queueing: Patient ${reqData.uid} already has arrivalIndex, marking request as chainOrder ${currentChainOrder + 1}`);
+                    } else if (!reqData.uid) {
+                        console.log(`⚠️ Request has no uid - guest user, skipping arrivalIndex creation`);
+                    }
+
+                    await db.ref().update(updates);
+                    console.log(`✅ Request accepted. Database updates queued:`, Object.keys(updates));
+                
+                    // Push Firestore notification for arrival_update
+                    if (reqData.uid && !hasActiveArrival) {
+                    // Chain initialization: ensure first arrival goes to earliest created request
+                    try {
+                        const qrSnap = await db.ref(`patients/${reqData.uid}/queueRequests`).once("value");
+                        const allAccepted = [];
+                        if (qrSnap.exists()) {
+                            qrSnap.forEach(child => {
+                                const val = child.val();
+                                if (val && val.status === "accepted" && val.estId === estId) {
+                                    allAccepted.push({ key: child.key, counterId: val.counterId, acceptedAt: val.acceptedAt || 0 });
+                                }
+                            });
+                        }
+                        // Sort by acceptedAt ascending (first accepted first)
+                        allAccepted.sort((a,b)=> (a.acceptedAt||0) - (b.acceptedAt||0));
+                        if (allAccepted.length) {
+                            const updates2 = {};
+                            // Re-number chainOrder starting from 0 by createdAt
+                            allAccepted.forEach((item, idx) => {
+                                updates2[`patients/${reqData.uid}/queueRequests/${item.key}/chainOrder`] = idx;
+                            });
+                            // Ensure arrivalIndex points to first in chain
+                            const first = allAccepted[0];
+                            updates2[`arrivalIndex/${reqData.uid}/counterId`] = first.counterId;
+                            updates2[`arrivalIndex/${reqData.uid}/estId`] = estId;
+                            updates2[`arrivalIndex/${reqData.uid}/requestKey`] = first.key;
+                            updates2[`arrivalIndex/${reqData.uid}/chainOrder`] = 0;
+                            await db.ref().update(updates2);
+                            console.log(`⛓️ Initialized chain ordering for patient ${reqData.uid}`, allAccepted.map(a=>({key:a.key, counterId:a.counterId, acceptedAt:a.acceptedAt})));
+                        }
+                    } catch (chainErr) {
+                        console.warn("Chain initialization error:", chainErr);
+                    }
+                        // New arrival (first queue request)
+                        await pushArrivalNotification(reqData.uid, {
+                            estId: estId,
+                            estName: estName,
+                            counterId: counterId,
+                            counterName: counterName,
+                            status: "awaiting_arrival",
+                            message: "Your request has been accepted. Please proceed to check in.",
+                            chainOrder: 0
+                        });
+                    } else if (reqData.uid && hasActiveArrival) {
+                        // Chain queue step
+                        const nextChainOrder = currentChainOrder + 1;
+                        await pushArrivalNotification(reqData.uid, {
+                            estId: estId,
+                            estName: estName,
+                            counterId: counterId,
+                            counterName: counterName,
+                            status: "waiting",
+                            message: "You've been added to a chained queue. Please wait for the next available counter.",
+                            chainOrder: nextChainOrder
+                        });
+                    }
+                } catch (err) {
+                    console.error("Accept request failed:", err);
+                    alert("Accept failed. Please try again.");
+                } finally {
+                    btnAccept.disabled = false;
+                    btnRejectReq.disabled = false;
+                }
+            };
+
+            /* ------------------------------ REJECT REQUEST ------------------------------ */
+
+            btnRejectReq.onclick = async (e) => {
+                e?.preventDefault?.();
+                e?.stopPropagation?.();
+                btnAccept.disabled = true;
+                btnRejectReq.disabled = true;
+
+                const now = Date.now();
+                const updates = {};
+
+                // Remove request from establishment counter (deleted, not just status update)
+                updates[`establishments/${estId}/counters/${counterId}/requests/${reqId}`] = null;
+
+                try {
+                    if (reqData.uid) {
+
+                        // Remove from patient's queueRequests so it disappears from My Requests (mobile & web)
+                        updates[`patients/${reqData.uid}/queueRequests/${reqId}`] = null;
+
+                        updates[`patients/${reqData.uid}/queueStatus`] = {
+                            status: "rejected",
+                            estId,
+                            counterId,
+                            timestamp: now
+                        };
+
+                        const notifKey =
+                            db.ref(`patients/${reqData.uid}/notifications`).push().key;
+
+                        updates[`patients/${reqData.uid}/notifications/${notifKey}`] = {
+                            type: "queue",
+                            estId,
+                            counterId,
+                            message: "Queue request rejected",
+                            timestamp: now
+                        };
+                    
+                        // Fetch establishment and counter names for Firestore notification
+                        const [estSnap, counterSnap] = await Promise.all([
+                            estRef.child("companyName").once("value"),
+                            counterRef.child("name").once("value")
+                        ]);
+                    
+                        const estName = estSnap.val() || "Unknown Establishment";
+                        const counterName = counterSnap.val() || "Unknown Counter";
+                    
+                        // Push Firestore notification that request was rejected
+                        await pushArrivalNotification(reqData.uid, {
+                            estId: estId,
+                            estName: estName,
+                            counterId: counterId,
+                            counterName: counterName,
+                            status: "rejected",
+                            message: `Your request has been rejected at ${counterName}.`,
+                            chainOrder: 0
+                        });
+                    }
+
+                    await db.ref().update(updates);
+                } catch (err) {
+                    console.error("Reject request failed:", err);
+                    alert("Reject failed. Please try again.");
+                } finally {
+                    btnAccept.disabled = false;
+                    btnRejectReq.disabled = false;
+                }
+            };
+
+        }); // end forEach request
+
+        updateSectionCount("requestsCount", requestCount);
+    }); // end request listener
+
+    /* ==========================================================================
+       AWAITING ARRIVAL LIST (from arrivalIndex - source of truth)
+       ========================================================================== */
+
+    // We don't listen to awaitingArrival anymore - use arrivalIndex instead
+    const awaitingItems = {}; // Track awaiting items in memory (keyed by patient uid)
+    const arrivalIndexKeyToUid = {}; // Map arrivalIndex entry key -> patient uid
+    
+    // Listen to arrivalIndex for patients awaiting arrival at THIS counter
+    const arrivalIndexRef = db.ref("arrivalIndex");
+    const arrivalIndexQuery = arrivalIndexRef.orderByChild("counterId").equalTo(counterId);
+    let awaitingRenderVersion = 0;
+    
+    // Load initial state (filtered by counter)
+    arrivalIndexQuery.once("value", snap => {
+        if (snap.exists()) {
+            snap.forEach(indexSnap => {
+                const data = indexSnap.val() || {};
+                const entryKey = indexSnap.key;
+                const uidResolved = data.uid || entryKey;
+                // Only track entries with awaiting_arrival status at THIS counter and (if present) matching establishment
+                if (data.status === "awaiting_arrival" && (!data.estId || data.estId === estId)) {
+                    awaitingItems[uidResolved] = data;
+                    arrivalIndexKeyToUid[entryKey] = uidResolved;
+                }
+            });
+        }
+        renderAwaitingList();
+    });
+
+    // Listen for NEW arrivals being added to arrivalIndex for THIS counter
+    arrivalIndexQuery.on("child_added", snap => {
+        const data = snap.val() || {};
+        const entryKey = snap.key;
+        const uidResolved = data.uid || entryKey;
+        // Only track if status is awaiting_arrival and establishment matches (if provided)
+        if (data.status === "awaiting_arrival" && (!data.estId || data.estId === estId)) {
+            awaitingItems[uidResolved] = data;
+            arrivalIndexKeyToUid[entryKey] = uidResolved;
+            renderAwaitingList();
+        }
+    });
+
+    // Listen for updates (status changes, counterId changes, etc.)
+    arrivalIndexQuery.on("child_changed", snap => {
+        const data = snap.val() || {};
+        const entryKey = snap.key;
+        const uidResolved = data.uid || entryKey;
+        
+        // If entry now points to THIS counter with awaiting_arrival status, add/update it
+        if (data.status === "awaiting_arrival" && (!data.estId || data.estId === estId)) {
+            awaitingItems[uidResolved] = data;
+            arrivalIndexKeyToUid[entryKey] = uidResolved;
+            renderAwaitingList();
+        } else {
+            // Entry no longer awaiting for this counter → remove if present
+            const mappedUid = arrivalIndexKeyToUid[entryKey] || uidResolved;
+            if (awaitingItems[mappedUid]) {
+                delete awaitingItems[mappedUid];
+            }
+            renderAwaitingList();
+        }
+    });
+
+    // Listen for REMOVAL (patient service completed, deleted from arrivalIndex)
+    arrivalIndexQuery.on("child_removed", snap => {
+        const entryKey = snap.key;
+        const mappedUid = arrivalIndexKeyToUid[entryKey] || entryKey;
+        if (awaitingItems[mappedUid]) {
+            delete awaitingItems[mappedUid];
+        }
+        delete arrivalIndexKeyToUid[entryKey];
+        renderAwaitingList();
+    });
+
+    async function renderAwaitingList() {
+        const version = ++awaitingRenderVersion;
+        awaitingArrivalList.innerHTML = "";
+        const uids = Object.keys(awaitingItems);
+        
+        if (uids.length === 0) {
+            awaitingArrivalList.innerHTML = "<div class=\"section-empty\">No patients awaiting arrival</div>";
+            updateSectionCount("awaitingArrivalCount", 0);
+            return;
+        }
+
+        // Get current queue to validate awaiting entries aren't already in queue
+        const queueSnap = await db.ref(`establishments/${estId}/counters/${counterId}/queue`).once("value");
+        const queueUids = {};
+        if (queueSnap.exists()) {
+            queueSnap.forEach(qSnap => {
+                const q = qSnap.val();
+                if (q && q.uid) {
+                    queueUids[q.uid] = true;
+                }
+            });
+        }
+
+        for (const uid of uids) {
+            const arrivalIndexData = awaitingItems[uid];
+            
+            // VALIDATION: Skip if patient is already in queue (arrival was processed)
+            if (queueUids[uid]) {
+                console.log(`⚠️ Skipping awaiting entry for uid ${uid} - already in queue`);
+                delete awaitingItems[uid];
+                continue;
+            }
+            
+            // Fetch patient data
+            let patientName = "Unknown";
+            let patientData = {};
+            if (uid) {
+                const pSnap = await db.ref(`patients/${uid}`).once("value");
+                if (pSnap.exists()) {
+                    patientData = pSnap.val();
+                    patientName = patientData.name || "Unknown";
+                }
+            }
+
+            // Fetch reason from request
+            let patientReason = "-";
+            const requestKey = arrivalIndexData.requestKey;
+            if (requestKey) {
+                const rSnap = await db.ref(`establishments/${estId}/counters/${counterId}/requests/${requestKey}`).once("value");
+                if (rSnap.exists()) {
+                    patientReason = rSnap.val().reason || "-";
+                }
+            }
+
+            // Render item (only if still in awaitingItems)
+            if (awaitingItems[uid]) {
+                if (version !== awaitingRenderVersion) return;
+                const div = document.createElement("div");
+                div.className = "queue-item";
+                div.setAttribute("data-uid", uid);
+                div.innerHTML = `
+                    <b>${patientName}</b><br>
+                    <span class="small">Reason: ${patientReason}</span><br>
+                    <span class="small" style="color: #ffc107;">⏱ Awaiting Health Gate scan...</span>
+                    <div style="margin-top: 8px;">
+                        <button class="btn accept" style="font-size: 0.8rem; padding: 5px 10px;">Verify PIN</button>
+                    </div>
+                `;
+                
+                const verifyBtn = div.querySelector(".btn");
+                verifyBtn.onclick = () => verifyPin(uid, uid);
+                awaitingArrivalList.appendChild(div);
+            }
+        }
+
+        updateSectionCount("awaitingArrivalCount", Object.keys(awaitingItems).length);
+    }
+
+/* ============================================================================
+   =====================  NO-SHOW REPORT + TIMER LOGIC  ========================
+   ============================================================================ */
+
+/* Global interval for countdown */
+let noShowInterval = null;
+
+/* ----------------------------- REPORT NO-SHOW ----------------------------- */
+
+btnNoShow.onclick = startNoShowReport;
+
+async function startNoShowReport() {
+
+    if (!currentCustomerKey || !currentCustomerData) {
+        alert("No current customer to report.");
+        return;
+    }
+
+    const uid = currentCustomerData.uid;
+
+    if (!uid) {
+        alert("Cannot report guest users as no-show.");
+        return;
+    }
+
+    const queueKey = currentCustomerKey;
+    const now = Date.now();
+    const fiveMinutes = 5 * 60 * 1000;
+    const expiresAt = now + fiveMinutes;
+
+    const timerRef = db.ref(
+        `establishments/${estId}/counters/${counterId}/noShowTimers/${queueKey}`
+    );
+
+    // Fetch establishment & counter names
+    const [estSnap, counterSnap] = await Promise.all([
+        estRef.child("companyName").once("value"),
+        counterRef.child("name").once("value")
+    ]);
+
+    const estNameVal = estSnap.val() || "Unknown Establishment";
+    const counterNameVal = counterSnap.val() || "Unknown Counter";
+
+    // First warning notification
+    const notifRef = db.ref(`patients/${uid}/notifications`).push();
+
+    const updates = {};
+
+    updates[`patients/${uid}/notifications/${notifRef.key}`] = {
+        type: "queue",
+        message:
+            "⚠ You have been marked as a no-show. Please proceed within 5 minutes.",
+        estId,
+        estName: estNameVal,
+        counterId,
+        counterName: counterNameVal,
+        timestamp: now
+    };
+
+    // Timer record
+    updates[
+        `establishments/${estId}/counters/${counterId}/noShowTimers/${queueKey}`
+    ] = {
+        uid,
+        queueKey,
+        estId,
+        counterId,
+        estName: estNameVal,
+        counterName: counterNameVal,
+        createdAt: now,
+        expiresAt,
+        active: true
+    };
+
+    await db.ref().update(updates);
+
+    alert("No-show reported. Timer started.");
+    startCountdown(expiresAt, queueKey, uid, estNameVal, counterNameVal);
+}
+
+/* ----------------------- COUNTDOWN + EXPIRATION LOGIC ----------------------- */
+
+const noShowIntervals = {}; // Store interval IDs per queueKey
+
+function startCountdown(expiresAt, queueKey, uid, estName, counterName) {
+
+    // Clear any existing interval for this specific queueKey
+    if (noShowIntervals[queueKey]) {
+        clearInterval(noShowIntervals[queueKey]);
+    }
+
+    // If this is the current customer being served, update the button
+    if (currentCustomerKey === queueKey) {
+        btnNoShow.onclick = () => cancelNoShow(queueKey);
+    }
+
+    noShowIntervals[queueKey] = setInterval(async () => {
+
+        const now = Date.now();
+        const remaining = expiresAt - now;
+
+        // Update countdown display only if this is the current customer
+        if (remaining > 0) {
+            if (currentCustomerKey === queueKey) {
+                const mins = Math.floor(remaining / 60000);
+                const secs = Math.floor((remaining % 60000) / 1000);
+                btnNoShow.innerHTML =
+                    `⚠ Cancel No-Show (${mins}:${secs.toString().padStart(2, "0")})`;
+            }
+            return;
+        }
+
+        // Time expired → finalize no-show
+        clearInterval(noShowIntervals[queueKey]);
+        delete noShowIntervals[queueKey];
+
+        await finalizeNoShow(queueKey, uid, estName, counterName);
+
+    }, 1000);
+}
+
+async function finalizeNoShow(queueKey, uid, estName, counterName) {
+
+    const timerRef = db.ref(`establishments/${estId}/counters/${counterId}/noShowTimers/${queueKey}`);
+    const timerSnap = await timerRef.once("value");
+    if (!timerSnap.exists()) return;
+
+    // Remove from queue
+    await db.ref(`establishments/${estId}/counters/${counterId}/queue/${queueKey}`).remove();
+
+    // Delete timer entry
+    await timerRef.remove();
+
+    // Update patient record
+    if (uid) {
+        const updates = {};
+
+        // Simulation Mode: immediately revoke RFID access and mark arrival completed
+        if (SIMULATION_MODE) {
+            if (qData.uid) {
+                updates[`arrivalIndex/${qData.uid}`] = null;
+            }
+            if (qData.arrivalId) {
+                updates[`establishments/${estId}/arrivals/${qData.arrivalId}/status`] = "completed";
+            }
+        }
+        updates[`patients/${uid}/activeQueues/${queueKey}`] = null;
+        updates[`patients/${uid}/queueStatus`] = {
+            status: "no-show",
+            estId,
+            counterId,
+            queueKey,
+            timestamp: Date.now()
+        };
+
+        const notifFinal = db.ref(`patients/${uid}/notifications`).push();
+        updates[`patients/${uid}/notifications/${notifFinal.key}`] = {
+            type: "queue",
+            message: "❌ You have been marked as a final no-show.",
+            estId,
+            estName,
+            counterId,
+            counterName,
+            timestamp: Date.now()
+        };
+
+        await db.ref().update(updates);
+    }
+
+    // Increment analytics
+    db.ref(`establishments/${estId}/counters/${counterId}/analytics/noShows`)
+        .transaction(current => (current || 0) + 1);
+
+    if (currentCustomerKey === queueKey) {
+        btnNoShow.innerHTML = "⚠ Report as no-show";
+        btnNoShow.style.display = "none";
+        btnEndService.style.display = "none";
+        patientInfoCard.style.display = "none";
+        currentCustomerKey = null;
+        currentCustomerData = null;
+    }
+}
+
+/* -------------------------------- CANCEL NO-SHOW -------------------------------- */
+
+async function cancelNoShow(queueKey) {
+
+    clearInterval(noShowInterval);
+
+    const timerPath =
+        `establishments/${estId}/counters/${counterId}/noShowTimers/${queueKey}`;
+
+    const timerRef = db.ref(timerPath);
+    const timerSnap = await timerRef.once("value");
+
+    if (!timerSnap.exists()) {
+        alert("Timer already removed.");
+        return;
+    }
+
+    const timerData = timerSnap.val();
+
+    const uid = timerData.uid;
+    const estName = timerData.estName;
+    const counterName = timerData.counterName;
+
+    // Send cancellation notification (if patient exists)
+    if (uid) {
+        const notifRef = db.ref(`patients/${uid}/notifications`).push();
+
+        await notifRef.set({
+            type: "queue",
+            message:
+                "ℹ️ Your no-show report has been cancelled. Thank you for responding promptly!",
+            estId,
+            estName,
+            counterId,
+            counterName,
+            timestamp: Date.now()
+        });
+    }
+
+    // Remove timer
+    await timerRef.remove();
+
+    alert("No-show canceled.");
+
+    // Reset UI
+    btnNoShow.innerHTML = "⚠ Report as no-show";
+    btnNoShow.onclick = startNoShowReport;
+}
+
+/* ============================================================================
+   ===============  DETECT CUSTOMER ENTERING IN-SERVICE  ======================
+   ============================================================================ */
+
+queueRef
+    .orderByChild("status")
+    .equalTo("in_service")
+    .on("child_added", async snap => {
+
+        const data = snap.val() || {};
+        const key = snap.key;
+
+        console.log("Detected in-service customer:", data);
+
+        // Prevent triggering twice for same person
+        if (currentCustomerKey === key) return;
+
+        currentCustomerKey = key;
+        currentCustomerData = data;
+        patientInfoCard.style.display = "block";
+        btnEndService.style.display = "inline-block";
+        btnNoShow.style.display = "inline-block";
+
+        // Disable admit button while someone is being served
+        btnNext.disabled = true;
+
+        /* ------------------- Update patient info card ------------------- */
+        updatePatientInfoCard(data);
+
+        /* ------------------- Load Establishment + Counter Names + Details -------- */
+
+        const [estSnap, counterSnap] = await Promise.all([
+            estRef.child("companyName").once("value"),
+            counterRef.child("name").once("value"),
+            counterRef.child("location").once("value"),
+            counterRef.child("priorityLane").once("value")
+        ]);
+
+        /* ------------------- Send "now in service" notification ------------------- */
+
+        if (data.uid) {
+            try {
+                const now = Date.now();
+                const estNameVal = estSnap.val() || "Unknown Establishment";
+                const counterNameVal = counterSnap.val() || "Unknown Counter";
+
+                const notifRef = db
+                    .ref(`patients/${data.uid}/notifications`)
+                    .push();
+
+                await notifRef.set({
+                    type: "queue",
+                    estId,
+                    estName: estNameVal,
+                    counterId,
+                    counterName: counterNameVal,
+                    message: "You are now in service.",
+                    timestamp: now
+                });
+
+                console.log("In-service notification sent:", notifRef.key);
+            } catch (err) {
+                console.error("Error sending in-service notification:", err);
+            }
+        }
+    });
+
+// Ensure UI resets if in_service entry is removed externally or after completion
+queueRef
+    .orderByChild("status")
+    .equalTo("in_service")
+    .on("child_removed", snap => {
+        const key = snap.key;
+        if (currentCustomerKey === key) {
+            patientInfoCard.style.display = "none";
+            btnEndService.style.display = "none";
+            btnNoShow.style.display = "none";
+            currentCustomerKey = null;
+            currentCustomerData = null;
+            btnNext.disabled = false;
+        }
+    });
+
+    /* ============================================================================
+       =========  RESTORE IN-SERVICE CUSTOMER ON PAGE RELOAD  ==========
+       
+       When page refreshes, child_added won't fire for existing entries.
+       This function restores the UI if a customer is already in-service.
+       ======================================================================== */
+    
+    async function restoreInServiceCustomer() {
+        const snap = await queueRef
+            .orderByChild("status")
+            .equalTo("in_service")
+            .limitToFirst(1)
+            .once("value");
+        
+        if (!snap.exists()) {
+            console.log("ℹ️ No in-service customer to restore");
+            return;
+        }
+        
+        snap.forEach(async s => {
+            const key = s.key;
+            const data = s.val() || {};
+            
+            if (currentCustomerKey === key) {
+                console.log("✅ In-service customer already restored");
+                return; // Already set by child_added listener
+            }
+            
+            console.log("🔄 Restoring in-service customer:", data.patientName);
+            
+            // Restore UI state
+            currentCustomerKey = key;
+            currentCustomerData = data;
+            patientInfoCard.style.display = "block";
+            btnEndService.style.display = "inline-block";
+            btnNoShow.style.display = "inline-block";
+            btnNext.disabled = true;
+            
+            // Update patient info card
+            updatePatientInfoCard(data);
+            
+            // Fetch establishment + counter names for restoration
+            const [estSnap, counterSnap] = await Promise.all([
+                estRef.child("companyName").once("value"),
+                counterRef.child("name").once("value")
+            ]);
+            
+            const estNameVal = estSnap.val() || "Unknown Establishment";
+            const counterNameVal = counterSnap.val() || "Unknown Counter";
+            
+            console.log(`✅ Restored: ${data.patientName} at ${counterNameVal}`);
+            
+            // Restore no-show timer if one exists
+            const timerRef = db.ref(`establishments/${estId}/counters/${counterId}/noShowTimers/${key}`);
+            const timerSnap = await timerRef.once("value");
+            if (timerSnap.exists()) {
+                const timerData = timerSnap.val();
+                console.log("⏱️ Restoring no-show timer...");
+                startCountdown(timerData.expiresAt, key, data.uid, estNameVal, counterNameVal);
+            }
+        });
+    }
+    
+    // Call restoration when page loads
+    restoreInServiceCustomer();
+
+    /* ============================================================================
+   =====================  QUEUE WAITING LIST DISPLAY  =========================
+   ============================================================================ */
+
+queueRef
+    .orderByChild("status")
+    .equalTo("waiting")
+    .on("value", snap => {
+
+        queueList.innerHTML = "";
+        let queueItemCount = 0;
+
+        if (!snap.exists()) {
+            queueList.innerHTML = "<div class=\"section-empty\">No one waiting</div>";
+            updateSectionCount("queueCount", 0);
+            return;
+        }
+
+        snap.forEach(c => {
+            queueItemCount++;
+            const v = c.val() || {};
+
+            const el = document.createElement("div");
+            el.className = "queue-item";
+
+            el.innerHTML = `
+                <b>${v.patientName || v.name || "Unknown"}</b><br>
+                <span class="small">Reason: ${v.reason || "-"}</span>
+            `;
+
+            queueList.appendChild(el);
+        });
+
+        updateSectionCount("queueCount", queueItemCount);
+    });
+
+    /* ============================================================================
+   ============================  ADMIT NEXT  =================================
+   ============================================================================ */
+
+btnNext.onclick = async () => {
+
+    // Get first waiting customer
+    const snap = await queueRef
+        .orderByChild("status")
+        .equalTo("waiting")
+        .limitToFirst(1)
+        .once("value");
+
+    if (!snap.exists()) {
+        alert("No one waiting.");
+        return;
+    }
+
+    snap.forEach(async s => {
+
+        const key = s.key;
+        const data = s.val() || {};
+        const now = Date.now();
+
+        const updates = {};
+
+        /* ---------------- Set status → in_service ---------------- */
+        updates[
+            `establishments/${estId}/counters/${counterId}/queue/${key}/status`
+        ] = "in_service";
+
+        updates[
+            `establishments/${estId}/counters/${counterId}/queue/${key}/serviceStartTime`
+        ] = now;
+
+        /* ---------------- Update patient active queue ---------------- */
+
+        if (data.uid) {
+            updates[`patients/${data.uid}/activeQueues/${key}/status`] =
+                "in_service";
+
+            updates[
+                `patients/${data.uid}/activeQueues/${key}/serviceStartTime`
+            ] = now;
+
+            updates[`patients/${data.uid}/queueStatus`] = {
+                status: "in_service",
+                estId,
+                counterId,
+                queueKey: key,
+                timestamp: now
+            };
+
+            // Reflect state in arrivalIndex for Android/clients
+            updates[`arrivalIndex/${data.uid}/status`] = "in_service";
+
+            /* ---------------- Send "Now in service" Notification ---------------- */
+            // Fetch names first
+            const [estSnap, counterSnap] = await Promise.all([
+                estRef.child("companyName").once("value"),
+                counterRef.child("name").once("value")
+            ]);
+            const estNameVal = estSnap.val() || "Unknown Establishment";
+            const counterNameVal = counterSnap.val() || "Unknown Counter";
+
+            const notifKey = db.ref(`patients/${data.uid}/notifications`).push().key;
+            updates[`patients/${data.uid}/notifications/${notifKey}`] = {
+                type: "queue",
+                estId,
+                estName: estNameVal,
+                counterId,
+                counterName: counterNameVal,
+                message: "You are now in service.",
+                timestamp: now
+            };
+            
+            // Push Firestore notification that patient is in service
+            await pushArrivalNotification(data.uid, {
+                estId: estId,
+                estName: estNameVal,
+                counterId: counterId,
+                counterName: counterNameVal,
+                status: "in_service",
+                message: `You are now being served at ${counterNameVal}.`,
+                chainOrder: data.chainOrder || 0
+            });
+        }
+
+        await db.ref().update(updates);
+
+        /* ---------------- Store as current customer ---------------- */
+
+        currentCustomerKey = key;
+        currentCustomerData = data;
+        patientInfoCard.style.display = "block";
+        btnEndService.style.display = "inline-block";
+        btnNoShow.style.display = "inline-block";
+
+        /* ------------------- Update patient info card ------------------- */
+        updatePatientInfoCard(data);
+    });
+};
+
+/* ============================================================================
+   ============================  END SERVICE  =================================
+   ============================================================================ */
+
+btnEndService.onclick = async () => {
+    try {
+        btnEndService.disabled = true;
+
+        if (!currentCustomerKey || !currentCustomerData) {
+            alert("No current customer.");
+            return;
+        }
+
+        const now = Date.now();
+
+        const qDataSnap = await queueRef.child(currentCustomerKey).once("value");
+
+        // Safety fallback: if entry missing, reset UI and exit
+        if (!qDataSnap.exists()) {
+            patientInfoCard.style.display = "none";
+            btnEndService.style.display = "none";
+            btnNoShow.style.display = "none";
+            currentCustomerKey = null;
+            currentCustomerData = null;
+            btnNext.disabled = false;
+            return;
+        }
+
+        const qData = qDataSnap.val() || {};
+
+        const join = qData.joinTime || now;
+        const start = qData.serviceStartTime || now;
+
+        const waitMs = start - join;
+        const serviceMs = now - start;
+
+        /* ---------------- Fetch establishment + counter names ---------------- */
+
+        const [estSnap, counterSnap] = await Promise.all([
+            estRef.child("companyName").once("value"),
+            counterRef.child("name").once("value")
+        ]);
+
+        const estNameVal = estSnap.val() || "Unknown Establishment";
+        const counterNameVal = counterSnap.val() || "Unknown Counter";
+
+        const updates = {};
+
+        /* ---------------- DELETE queue entry (no longer in active queue) ---------------- */
+        updates[
+            `establishments/${estId}/counters/${counterId}/queue/${currentCustomerKey}`
+        ] = null;
+
+        // Simulation: immediately revoke RFID access by clearing arrivalIndex
+        if (qData.uid) {
+            updates[`arrivalIndex/${qData.uid}`] = null;
+        }
+        // Optionally mark the immutable arrival record as completed
+        if (qData.arrivalId) {
+            updates[`establishments/${estId}/arrivals/${qData.arrivalId}/status`] = "completed";
+        }
+
+    /* ============================================================================
+       ==================  CHAIN QUEUEING: AUTO-QUEUE NEXT REQUEST  ==============
+       ============================================================================ */
+    
+    let chainQueued = false; // Track if patient was auto-queued to next counter
+    
+    if (!SIMULATION_MODE && qData.uid) {
+        // Check for accepted requests with chainOrder > currentChainOrder (next in chain)
+        try {
+            const patientQReqRef = db.ref(`patients/${qData.uid}/queueRequests`);
+            const qReqSnap = await patientQReqRef.once("value");
+            
+            if (qReqSnap.exists()) {
+                // Find next accepted request with lowest chainOrder > current
+                let nextRequest = null;
+                let nextRequestKey = null;
+                let lowestChainOrder = Infinity;
+                const currentChainOrder = qData.chainOrder !== undefined ? qData.chainOrder : 0;
+                
+                qReqSnap.forEach(reqSnap => {
+                    const req = reqSnap.val();
+                    // Find accepted requests with higher chainOrder
+                    if (req.status === "accepted") {
+                        const chainOrder = req.chainOrder !== undefined ? req.chainOrder : Infinity;
+                        if (chainOrder > currentChainOrder && chainOrder < lowestChainOrder) {
+                            lowestChainOrder = chainOrder;
+                            nextRequest = req;
+                            nextRequestKey = reqSnap.key;
+                        }
+                    }
+                });
+                
+                // If next request found, UPDATE arrivalIndex for chain progression
+                if (nextRequest && nextRequestKey) {
+                    const nextCounterId = nextRequest.counterId;
+                    const nextEstId = nextRequest.estId;
+                    const nextCounterName = nextRequest.counterName || "Unknown Counter";
+                    const nextEstName = nextRequest.estName || "Unknown Establishment";
+                    
+                    // UPDATE arrivalIndex to point to new counter (chainOrder progression)
+                    // Do NOT create awaitingArrival - hardware/manual PIN handles arrival processing
+                    updates[`arrivalIndex/${qData.uid}`] = {
+                        uid: qData.uid,
+                        counterId: nextCounterId,
+                        estId: nextEstId,
+                        requestKey: nextRequestKey,
+                        chainOrder: lowestChainOrder,
+                        status: "awaiting_arrival",
+                        updatedAt: now
+                    };
+                    
+                    // Generate new queue key for this chain
+                    const newQueueKey = db.ref(`establishments/${nextEstId}/counters/${nextCounterId}/queue`).push().key;
+                    
+                    // Build queue data for next counter
+                    const nextQueueData = {
+                        uid: qData.uid,
+                        patientName: (qData.patientName !== undefined ? qData.patientName : (qData.name !== undefined ? qData.name : null)),
+                        age: (qData.age !== undefined ? qData.age : null),
+                        reason: nextRequest.reason || null,
+                        status: "waiting",
+                        joinTime: now,
+                        chainOrder: lowestChainOrder,
+                        estId: nextEstId,
+                        estName: nextEstName,
+                        counterId: nextCounterId,
+                        counterName: nextCounterName,
+                        requestKey: nextRequestKey,
+                        arrivalId: qData.arrivalId || null,
+                        pwd: qData.pwd || false,
+                        senior: qData.senior || false,
+                        severecon: qData.severecon || false
+                    };
+                    
+                    // Add to next counter's queue
+                    updates[`establishments/${nextEstId}/counters/${nextCounterId}/queue/${newQueueKey}`] = nextQueueData;
+                    
+                    // Mark request as "in_queue"
+                    updates[`patients/${qData.uid}/queueRequests/${nextRequestKey}/status`] = "in_queue";
+                    
+                    // Update patient's active queues
+                    updates[`patients/${qData.uid}/activeQueues/${newQueueKey}`] = {
+                        status: "waiting",
+                        estId: nextEstId,
+                        estName: nextEstName,
+                        counterId: nextCounterId,
+                        counterName: nextCounterName,
+                        joinTime: now,
+                        queueKey: newQueueKey,
+                        requestKey: nextRequestKey,
+                        chainOrder: lowestChainOrder,
+                        reason: nextRequest.reason || null
+                    };
+                    
+                    // Update patient's queue status
+                    updates[`patients/${qData.uid}/queueStatus`] = {
+                        status: "waiting",
+                        estId: nextEstId,
+                        estName: nextEstName,
+                        counterId: nextCounterId,
+                        counterName: nextCounterName,
+                        queueKey: newQueueKey,
+                        timestamp: now
+                    };
+                    
+                    // Notify patient of automatic chain queueing
+                    const chainNotifKey = db.ref(`patients/${qData.uid}/notifications`).push().key;
+                    updates[`patients/${qData.uid}/notifications/${chainNotifKey}`] = {
+                        type: "queue",
+                        message: `✨ Auto-queued at ${nextCounterName} - no rescan needed!`,
+                        estId: nextEstId,
+                        estName: nextEstName,
+                        counterId: nextCounterId,
+                        counterName: nextCounterName,
+                        timestamp: now
+                    };
+                    
+                    // Push Firestore notification for chain queue step
+                    await pushArrivalNotification(qData.uid, {
+                        estId: nextEstId,
+                        estName: nextEstName,
+                        counterId: nextCounterId,
+                        counterName: nextCounterName,
+                        status: "waiting",
+                        message: `Please proceed to ${nextCounterName} for the next step of your service.`,
+                        chainOrder: lowestChainOrder
+                    });
+                    
+                    chainQueued = true;
+                    console.log(`⛓️ Chain queue: Patient ${qData.uid} auto-queued to counter ${nextCounterId} with chainOrder ${lowestChainOrder}`);
+                } else {
+                    // No more requests in chain - mark arrivalIndex completed (preserve record)
+                    updates[`arrivalIndex/${qData.uid}/status`] = "completed";
+                    updates[`arrivalIndex/${qData.uid}/updatedAt`] = now;
+                    console.log(`✅ Chain complete: Marked arrivalIndex completed for patient ${qData.uid}`);
+                }
+            } else {
+                // No requests at all - mark arrivalIndex completed (preserve record)
+                updates[`arrivalIndex/${qData.uid}/status`] = "completed";
+                updates[`arrivalIndex/${qData.uid}/updatedAt`] = now;
+            }
+        } catch (chainError) {
+            console.error("❌ Error processing chain queue:", chainError);
+            // Silently fail - don't break the current service flow
+        }
+    }
+
+    /* ============================================================================
+       =====================  ARCHIVE ARRIVAL RECORD  ============================
+       After patient completes final service (no more chain requests), archive the
+       immutable arrival record. This keeps the arrivals log clean while preserving
+       audit trail in patients/{uid}/visited records.
+       ============================================================================ */
+    
+    if (!SIMULATION_MODE && qData.arrivalId && !chainQueued) {
+        // Only delete arrival after final service completion, not during chain progression
+        try {
+            await db.ref(`establishments/${estId}/arrivals/${qData.arrivalId}`).remove();
+            console.log(`🗑️ Archived arrival record: ${qData.arrivalId}`);
+        } catch (archErr) {
+            console.warn(`⚠️ Could not archive arrival ${qData.arrivalId}:`, archErr);
+            // Non-critical, continue
+        }
+    }
+
+    /* ---------------- Registered users: save visit record ---------------- */
+
+    if (qData.uid) {
+
+        const visitKey =
+            db.ref().child("patients").child(qData.uid).child("visited").push().key;
+
+        updates[`patients/${qData.uid}/visited/${visitKey}`] = {
+            estId,
+            estName: estNameVal,
+            counterId,
+            counterName: counterNameVal,
+            joinTime: join,
+            serviceStartTime: start,
+            serviceEndTime: now,
+            waitMs,
+            serviceMs,
+            timestamp: now,
+            reason: qData.reason || null,
+            chainQueued: chainQueued // Track if patient was auto-queued to next service
+        };
+
+        // Clear active queue (only if NOT chained - otherwise activeQueues updated above)
+        if (!chainQueued) {
+            updates[`patients/${qData.uid}/activeQueues/${currentCustomerKey}`] = null;
+            updates[`patients/${qData.uid}/queueStatus`] = null;
+        } else {
+            // Remove from current counter's active queue, but keep queueStatus updated (done above)
+            updates[`patients/${qData.uid}/activeQueues/${currentCustomerKey}`] = null;
+        }
+
+        // Notification: service finished
+        const notifKey =
+            db.ref(`patients/${qData.uid}/notifications`).push().key;
+
+        updates[`patients/${qData.uid}/notifications/${notifKey}`] = {
+            type: "queue",
+            estId,
+            estName: estNameVal,
+            counterId,
+            counterName: counterNameVal,
+            message: chainQueued ? "Service complete - moving to next counter..." : "Service is done",
+            timestamp: now
+        };
+        
+        // Push Firestore notification for service completion
+        if (!chainQueued) {
+            // Final service complete - no more chain steps
+            await pushArrivalNotification(qData.uid, {
+                estId: estId,
+                estName: estNameVal,
+                counterId: counterId,
+                counterName: counterNameVal,
+                status: "completed",
+                message: "Your service has been completed. Thank you for visiting!",
+                chainOrder: 0
+            });
+        } else {
+            // Chain progression - patient is moving to next counter
+            await pushArrivalNotification(qData.uid, {
+                estId: estId,
+                estName: estNameVal,
+                counterId: counterId,
+                counterName: counterNameVal,
+                status: "waiting",
+                message: "Service complete at this counter. Proceeding to next step...",
+                chainOrder: qData.chainOrder || 0
+            });
+        }
+    }
+
+        await db.ref().update(updates);
+
+        /* ---------------- Reset UI ---------------- */
+
+        patientInfoCard.style.display = "none";
+        btnEndService.style.display = "none";
+        btnNoShow.style.display = "none";
+
+        currentCustomerKey = null;
+        currentCustomerData = null;
+        btnNext.disabled = false;
+    } catch (e) {
+        console.error("End Service failed:", e);
+        alert("End Service failed. Please try again.");
+    } finally {
+        btnEndService.disabled = false;
+    }
+};
+
+/* ------------------- Add click handler for patient info card ------------------- */
+document.getElementById("patientInfoCard").addEventListener("click", () => {
+    if (currentCustomerData && currentCustomerData.uid) {
+        openPatientDetail(currentCustomerData.uid);
+    }
+});
+
+/* --------------------------- RESTORE NO-SHOW TIMERS --------------------------- */
+
+function restoreNoShowTimers() {
+    const timersRef = db.ref(`establishments/${estId}/counters/${counterId}/noShowTimers`);
+    timersRef.orderByChild("active").equalTo(true).once("value", snap => {
+        if (!snap.exists()) return;
+
+        snap.forEach(timerSnap => {
+            const t = timerSnap.val();
+            const queueKey = t.queueKey;
+            const uid = t.uid;
+            const expiresAt = t.expiresAt;
+
+            if (expiresAt <= Date.now()) {
+                finalizeNoShow(queueKey, uid, t.estName, t.counterName);
+            } else {
+                startCountdown(expiresAt, queueKey, uid, t.estName, t.counterName);
+            }
+        });
+    });
+}
+
+// Call this at the end of initCounterPage
+restoreNoShowTimers();
+
+    /* ============================================================================
+       =====================  REAL-TIME ARRIVALS LISTENER  ======================
+       
+       ARCHITECTURE:
+       - arrivals = IMMUTABLE EVENT LOG (append-only, never delete)
+       - awaitingArrival = TRANSITION STATE (delete after arrival processed)
+       - queue = ACTIVE QUEUE (current patient list, updated independently)
+       
+       HARDWARE FLOW (from .ino file):
+       1. Scan RFID card → check if enabled
+       2. Look up awaiting arrival for patient
+       3. Prompt for PIN (0-9, timeout 15s, # to submit, * to clear)
+       4. Verify PIN matches /patients/{patientId}/pin
+       5. Write arrival record: {uid, awaitingKey, requestKey, counterId, timestamp, method}
+       6. Update awaitingArrival status to "arrived"
+       
+       WEB FLOW:
+       1. Hardware writes arrival record (method: "rfid") - IMMUTABLE
+       2. OR Manual PIN verification writes arrival record (method: "manual_pin") - IMMUTABLE
+       3. This listener processes both types uniformly
+       4. Fetches all patient data
+       5. ADDS to active queue
+       6. DELETES awaitingArrival entry
+       7. DOES NOT DELETE arrivals (immutable log for audit trail)
+       
+       ============================================================================ */
+
+    const arrivalsRef = db.ref(`establishments/${estId}/arrivals`);
+
+    // Use a persistent processed marker under the counter to avoid re-processing immutable arrivals
+    const processedBase = `establishments/${estId}/counters/${counterId}/processedArrivals`;
+
+    // Startup validation: arrivalIndex is single source of truth - no cleanup needed
+
+    // UI panel for arrived patients removed per request; keep processing logic below
+
+    arrivalsRef.on("child_added", async (snapshot) => {
+        const arrival = snapshot.val();
+        const arrivalKey = snapshot.key;
+
+        if (!arrival) return;
+
+        // Check persistent processed marker before doing any work
+        const processedSnap = await db.ref(`${processedBase}/${arrivalKey}`).once("value");
+        if (processedSnap.exists()) {
+            console.log("⏭️ Arrival already processed (persistent), skipping:", arrivalKey);
+            return;
+        }
+
+        const requestKey = arrival.requestKey;
+        const patientId = arrival.uid;
+
+        if (!patientId) {
+            console.log('Arrival has no uid, skipping:', arrivalKey);
+            await db.ref(`${processedBase}/${arrivalKey}`).set(true);
+            return;
+        }
+
+        // Validate against arrivalIndex (single source of truth)
+        const arrivalIndexSnap = await db.ref(`arrivalIndex/${patientId}`).once('value');
+        if (!arrivalIndexSnap.exists()) {
+            console.log('No arrivalIndex for patient', patientId, '- skipping arrival', arrivalKey);
+            await db.ref(`${processedBase}/${arrivalKey}`).set(true);
+            return;
+        }
+
+        const arrivalIndexData = arrivalIndexSnap.val();
+        const targetCounterId = arrivalIndexData.counterId;
+
+        // Ensure arrivalIndex points to THIS counter page
+        if (targetCounterId !== counterId) {
+            console.log(`arrivalIndex for ${patientId} points to counter ${targetCounterId}, skipping on counter ${counterId}`);
+            await db.ref(`${processedBase}/${arrivalKey}`).set(true);
+            return;
+        }
+
+        console.log("🔔 New arrival to process (validated via arrivalIndex):", arrivalKey, arrival);
+
+        try {
+            // Fetch patient data for the queue
+            const patientSnap = await db.ref(`patients/${patientId}`).once("value");
+            const patientData = patientSnap.exists() ? patientSnap.val() : {};
+
+            // Fetch request data for reason and patientName
+            let requestData = {};
+            if (requestKey) {
+                const requestSnap = await db.ref(`establishments/${estId}/counters/${counterId}/requests/${requestKey}`).once("value");
+                if (requestSnap.exists()) {
+                    requestData = requestSnap.val();
+                }
+            }
+
+            // Fetch establishment and counter names
+            const [estSnap, counterSnap] = await Promise.all([
+                estRef.child("companyName").once("value"),
+                counterRef.child("name").once("value")
+            ]);
+
+            const estName = estSnap.val() || "Unknown Establishment";
+            const counterName = counterSnap.val() || "Unknown Counter";
+
+            const now = Date.now();
+            const updates = {};
+
+            // Generate NEW queue key (no longer relying on awaitingKey)
+            const queueKey = db.ref(`establishments/${estId}/counters/${counterId}/queue`).push().key;
+
+            // 1. ADD patient to ACTIVE QUEUE with complete data
+            const queueData = {
+                uid: patientId,
+                arrivalId: arrivalKey,  // Reference back to immutable arrival record
+                requestKey: requestKey || null,
+                patientName: patientData.name || requestData.patientName || "Unknown",
+                age: patientData.age || null,
+                reason: requestData.reason || null,
+                status: "waiting",
+                joinTime: now,
+                estId: estId,
+                estName: estName,
+                counterId: targetCounterId,
+                counterName: counterName,
+                pwd: patientData.pwd || false,
+                senior: patientData.senior || false,
+                severecon: patientData.severecon || false
+            };
+
+            updates[`establishments/${estId}/counters/${counterId}/queue/${queueKey}`] = queueData;
+
+            // 2. Update the request status to in_queue (preserve for history/admin)
+            if (requestKey) {
+                updates[`establishments/${estId}/counters/${counterId}/requests/${requestKey}/status`] = "in_queue";
+                
+                // Also mark patient's queueRequests as in_queue
+                if (patientId) {
+                    updates[`patients/${patientId}/queueRequests/${requestKey}/status`] = "in_queue";
+                }
+            }
+
+            // 3. Update patient queue status
+            updates[`patients/${patientId}/queueStatus`] = {
+                status: "waiting",
+                estId,
+                estName,
+                counterId: targetCounterId,
+                counterName,
+                queueKey: queueKey,
+                arrivalId: arrivalKey,
+                timestamp: now
+            };
+
+            // 4. Update patient active queues
+            updates[`patients/${patientId}/activeQueues/${queueKey}`] = {
+                status: "waiting",
+                estId,
+                estName,
+                counterId: targetCounterId,
+                counterName,
+                joinTime: now,
+                queueKey: queueKey,
+                arrivalId: arrivalKey,
+                reason: requestData.reason || null
+            };
+
+            // 5. Send notification to patient
+            const notifKey = db.ref(`patients/${patientId}/notifications`).push().key;
+            updates[`patients/${patientId}/notifications/${notifKey}`] = {
+                type: "queue",
+                message: "You have been added to the queue!",
+                estId,
+                estName,
+                counterId: targetCounterId,
+                counterName,
+                timestamp: now
+            };
+
+            // 6. Update arrivalIndex status to 'waiting' (reflects active queue state)
+            updates[`arrivalIndex/${patientId}/status`] = "waiting";
+
+            // 7. Mark arrival as processed (persistent marker to avoid reprocessing)
+            updates[`${processedBase}/${arrivalKey}`] = true;
+
+            // Apply all updates atomically
+            await db.ref().update(updates);
+
+            console.log("✅ Patient moved to active queue:", patientId);
+            console.log("Queue entry key:", queueKey);
+            console.log("Arrival record (immutable):", arrivalKey);
+            
+            // Push Firestore notification for arrival (patient is now waiting in queue)
+            await pushArrivalNotification(patientId, {
+                estId: estId,
+                estName: estName,
+                counterId: targetCounterId,
+                counterName: counterName,
+                status: "waiting",
+                message: `You are now in the queue at ${counterName}.`,
+                chainOrder: arrivalIndexData.chainOrder || 0
+            });
+
+            // 7. Enable admit next button
+            btnNext.disabled = false;
+
+        } catch (error) {
+            console.error("❌ Error processing arrival:", error);
+        }
+    });
+
+}      
+
+    /* ============================================================================
+       ============================  VERIFY PIN LOGIC  ============================
+       ============================================================================ */
+    
+    window.verifyPin = async (awaitingKey, uid) => {
+        if (!uid) {
+            alert("Error: User ID missing for this request.");
+            return;
+        }
+
+        const pin = prompt("Enter Patient PIN to confirm arrival:");
+        if (!pin) return; // User cancelled
+
+        try {
+            // Fetch the correct PIN from the patient's record (matches hardware: /patients/{patientId}/pin)
+            const userPinSnap = await db.ref(`patients/${uid}/pin`).once("value");
+            if (!userPinSnap.exists()) {
+                alert("This patient has not set a PIN.");
+                return;
+            }
+            const correctPin = userPinSnap.val();
+            // Always compare as strings to avoid type mismatch
+            if (String(pin) === String(correctPin)) {
+                // PIN matches! Write arrival record (like hardware does)
+                // This will trigger the arrivalsRef listener to process the arrival
+                await writeManualArrival(awaitingKey, uid);
+            } else {
+                alert("Incorrect PIN. Please try again.");
+            }
+        } catch (err) {
+            console.error("PIN Verification Error:", err);
+            alert("An error occurred during verification.");
+        }
+    };
+
+    /* ============================================================================
+       ====== WRITE MANUAL ARRIVAL (for PIN verification without RFID) =========
+       ============================================================================ */
+    
+    async function writeManualArrival(uid, uidParam) {
+        try {
+            // Fetch arrivalIndex data to get requestKey and other info
+            // Note: awaitingKey param is actually uid (from the refactored listener)
+            const arrivalSnap = await db.ref(`arrivalIndex/${uid}`).once("value");
+
+            if (!arrivalSnap.exists()) {
+                alert("Awaiting arrival record not found in arrivalIndex.");
+                return;
+            }
+
+            const arrivalData = arrivalSnap.val();
+            const requestKey = arrivalData.requestKey || null; // avoid undefined writes
+            const targetCounterId = arrivalData.counterId || counterId;
+            const targetEstId = arrivalData.estId || estId;
+
+            // Create arrival record (matches hardware structure)
+            const now = Date.now();
+            const arrival = {
+                uid: uid,
+                counterId: targetCounterId,
+                timestamp: now,
+                method: "manual_pin"
+            };
+            if (requestKey !== null) {
+                arrival.requestKey = requestKey;
+            }
+
+            // Write to arrivals (same as hardware does)
+            const arrivalKey = db.ref(`establishments/${targetEstId}/arrivals`).push().key;
+            await db.ref(`establishments/${targetEstId}/arrivals/${arrivalKey}`).set(arrival);
+
+            console.log("✅ Manual arrival recorded via PIN verification");
+            console.log("Arrival record:", arrival);
+            console.log(`Processing arrival for patient ${uid} at counter ${targetCounterId}`);
+
+            // arrivalsRef listener will now process this arrival
+            // It will:
+            // 1. Create queue entry
+            // 2. Delete arrivalIndex entry
+            // 3. Trigger UI updates
+        } catch (error) {
+            console.error("❌ Error writing manual arrival:", error);
+            alert("Error confirming arrival.");
+        }
+    }
+
+    /* ============================================================================
+       =====================  TESTING: QUEUE REQUEST SIMULATOR  ==================
+       ============================================================================ */
+
+    window.testQueueRequest = async (options = {}) => {
+        // Default test data
+        const testData = {
+            uid: options.uid || "test_patient_" + Math.random().toString(36).substr(2, 9),
+            patientName: options.patientName || "Test Patient",
+            reason: options.reason || "General Checkup",
+            age: options.age || 35,
+            gender: options.gender || "Unknown",
+            ...options
+        };
+
+        try {
+            const requestKey = db.ref(`establishments/${estId}/counters/${counterId}/requests`).push().key;
+            const now = Date.now();
+
+            const queueRequest = {
+                uid: testData.uid,
+                patientName: testData.patientName,
+                reason: testData.reason,
+                age: testData.age,
+                gender: testData.gender,
+                status: "pending",
+                createdAt: now
+            };
+
+            // Write to counter requests
+            await db.ref(`establishments/${estId}/counters/${counterId}/requests/${requestKey}`).set(queueRequest);
+
+            // Write to patient queue requests (if uid provided)
+            if (testData.uid) {
+                await db.ref(`patients/${testData.uid}/queueRequests/${requestKey}`).set({
+                    counterId,
+                    estId,
+                    status: "pending",
+                    createdAt: now
+                });
+            }
+
+            console.log("✅ Queue request created successfully!");
+            console.log("Request Key:", requestKey);
+            console.log("Test Data:", queueRequest);
+            return requestKey;
+        } catch (error) {
+            console.error("❌ Error creating queue request:", error);
+        }
+    };
+
+    window.testArrival = async (options = {}) => {
+        // This simulates the hardware sending an arrival
+        // Usage: testArrival({ awaitingKey: "...", requestKey: "...", uid: "..." })
+        
+        try {
+            const arrivalKey = db.ref(`establishments/${estId}/arrivals`).push().key;
+            const now = Date.now();
+
+            const arrival = {
+                uid: options.uid || "test_patient",
+                awaitingKey: options.awaitingKey || "test_awaiting_key",
+                requestKey: options.requestKey || "test_request_key",
+                counterId: counterId,
+                timestamp: now,
+                method: options.method || "rfid"  // "rfid" or "manual_pin"
+            };
+
+            await db.ref(`establishments/${estId}/arrivals/${arrivalKey}`).set(arrival);
+
+            console.log("✅ Arrival record created successfully!");
+            console.log("Arrival Key:", arrivalKey);
+            console.log("Arrival Data:", arrival);
+            return arrivalKey;
+        } catch (error) {
+            console.error("❌ Error creating arrival:", error);
+        }
+    };
+
+    window.testCompleteFlow = async (options = {}) => {
+        // Complete flow: create request → accept it → simulate arrival
+        console.log("Starting complete test flow...");
+
+        const testData = {
+            uid: options.uid || "test_patient_" + Math.random().toString(36).substr(2, 9),
+            patientName: options.patientName || "Test Patient",
+            reason: options.reason || "General Checkup",
+            ...options
+        };
+
+        try {
+            // Step 1: Create queue request
+            console.log("Step 1: Creating queue request...");
+            const requestKey = await window.testQueueRequest(testData);
+
+            // Wait a moment for the UI to update
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Step 2: Get the awaiting key (you'll need to accept the request in the UI)
+            console.log("Step 2: Waiting for you to accept the request in the UI...");
+            console.log("Once accepted, run: testArrival({ awaitingKey: 'YOUR_AWAITING_KEY', requestKey: '" + requestKey + "', uid: '" + testData.uid + "' })");
+
+        } catch (error) {
+            console.error("❌ Error in complete flow:", error);
+        }
+    };
+
+    console.log("🧪 Test commands available:");
+    console.log("  testQueueRequest({ uid, patientName, reason, age })");
+    console.log("    → Creates a queue request. Returns the request key.");
+    console.log("");
+    console.log("  testArrival({ awaitingKey, requestKey, uid })");
+    console.log("    → Simulates hardware arrival. Gets called after accepting request.");
+    console.log("");
+    console.log("  ⛓️ CHAIN QUEUEING:");
+    console.log("    → Automatic! When End Service is clicked:");
+    console.log("    → 1. Check patient's pending queueRequests");
+    console.log("    → 2. Find lowest order request");
+    console.log("    → 3. Auto-queue at that counter");
+    console.log("    → 4. No rescan needed!");
+    console.log("");
+    console.log("Examples:");
+    console.log("  testQueueRequest({ patientName: 'John Doe', reason: 'Checkup' })");
+    console.log("  testArrival({ awaitingKey: '-OkAwait123', requestKey: '-OkReq456', uid: 'patient123' })");
+</script>
+</body>
+</html>

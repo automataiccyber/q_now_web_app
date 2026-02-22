@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Q-now | Appointment Management</title>
+<style>
+  :root{
+    --primary:#0077cc;--primary-dark:#005fa3;--accent:#00aaff;
+    --light-bg:#f5f7fa;--card-bg:#ffffff;--text:#333;--text-light:#555;
+    --shadow:0 4px 8px rgba(0,0,0,0.08);--radius:10px;--transition:all .25s ease;
+  }
+  body{ margin:0; font-family:'Segoe UI',Arial,sans-serif; background:var(--light-bg); color:var(--text); padding-top:65px; }
+  header{ background:var(--primary); color:#fff; padding:15px 20px; display:flex; justify-content:space-between; align-items:center; box-shadow:var(--shadow); position:fixed; top:0; left:0; right:0; z-index:1000; width:100%; box-sizing:border-box; flex-wrap:wrap; gap:10px; }
+  header h1{ margin:0; font-size:1.3rem; flex:0 0 auto; }
+  nav { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; flex:1 1 auto; }
+  nav a{ color:#fff; margin-left:0; text-decoration:none; font-weight:500; transition:var(--transition); white-space:nowrap; font-size:0.9rem; }
+  nav a:hover{ color:var(--accent); transform:translateY(-2px); }
+
+  .container{ max-width:1100px; margin:30px auto; padding:25px; background:var(--card-bg); border-radius:var(--radius); box-shadow:var(--shadow); }
+  h2{ color:var(--primary-dark); margin-top:0; }
+  h3{ color:var(--text-light); margin-bottom:8px; }
+  .schedule{ overflow-x:auto; margin-top:12px; }
+  
+  .schedule-legend {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: var(--radius);
+    border: 1px solid #ddd;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+
+  .legend-box {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    border: 1px solid #999;
+  }
+
+  .legend-available { background: #90EE90; border: 1px solid #4CAF50; }
+  .legend-occupied { background: #FFB6C6; border: 1px solid #dc3545; }
+
+  table{ border-collapse:collapse; width:100%; min-width:680px; border-radius:var(--radius); overflow:hidden; }
+  th,td{ border:1px solid #ddd; padding:8px; text-align:center; vertical-align:middle; word-break:break-word; }
+  th{ background:var(--primary); color:#fff; font-weight:600; }
+  td.empty{ background:#90EE90; cursor:pointer; transition:var(--transition); border: 1px solid #4CAF50; }
+  td.empty:hover{ background:#7FD97F; }
+  td.booked{ background:#FFB6C6; cursor:pointer; transition:var(--transition); border: 1px solid #dc3545; position: relative; }
+  td.booked:hover{ background:#FF8FA3; }
+  table td:first-child, table th:first-child{ width:120px; text-align:left; padding-left:10px; font-weight:bold; background:#f0f4f8; }
+
+  .pending-card, .appt-card{ border:1px solid #ddd; background:#fff8e1; padding:12px; margin:10px 0; border-radius:var(--radius); box-shadow:var(--shadow); transition:var(--transition);}
+  .pending-card:hover, .appt-card:hover{ transform:translateY(-3px); box-shadow:0 6px 12px rgba(0,0,0,0.1);}
+  .patient-meta,.est-meta{ font-size:0.9rem; color:var(--text-light); line-height:1.4; }
+  .est-meta{ margin-bottom:10px; }
+  .btn{ padding:8px 14px; border-radius:6px; border:none; cursor:pointer; margin-right:6px; font-weight:500; transition:var(--transition); }
+  .btn-accept{ background:var(--primary); color:#fff; }
+  .btn-reject{ background:#dc3545; color:#fff; }
+  .btn-confirm{ background:#28a745; color:#fff; margin-top:8px; }
+  .btn-reschedule{ background:#ff9800; color:#fff; }
+  .small{ font-size:0.85rem; color:#666; }
+  .slot-list{ display:flex; flex-direction:column; gap:6px; justify-content:center; align-items:center; }
+  .slot-item{ background:#ffffff; color:#333; border:1px solid #e3a8b1; border-radius:999px; padding:4px 10px; font-size:0.8rem; max-width:92%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,0.06); }
+  .slot-count{ position:absolute; top:3px; right:4px; background:#dc3545; color:#fff; border-radius:10px; padding:0 6px; font-size:0.7rem; display:none; }
+  td.booked.multiple .slot-count{ display:inline-block; }
+  /* overlay is visually present but doesn't block clicks to the grid.
+     dialog keeps pointer events enabled so its buttons work. */
+  .overlay {
+  position: fixed; 
+  left:0; top:0; right:0; bottom:0; 
+  background: rgba(0,0,0,0.35);
+  display: flex; 
+  align-items:center; 
+  justify-content:center;
+  pointer-events: auto;  /* allow clicks inside overlay and modal */
+  z-index: 5000;          /* ensure overlay below confirm button */
+}
+  .dialog{ background:#fff; padding:18px; border-radius:10px; width:560px; max-width:90%;
+    box-shadow:0 10px 30px rgba(0,0,0,0.3);
+    pointer-events:auto; /* dialog clickable */
+  }
+  .dialog h4{ margin:0 0 8px 0; }
+  .dialog .row{ margin-top:10px; display:flex; gap:8px; align-items:center; }
+  .dialog button{ margin-left:auto; }
+  .outline-selected{ outline:3px solid var(--primary); }
+  .muted{ opacity:0.7; }
+
+  #confirmSelectionBtn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: none;         /* initially hidden */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  pointer-events: auto;  /* just to be explicit */
+}
+
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 6px;
+    display: none;
+    z-index: 10001;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  }
+
+    .slot-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      z-index: 1000;
+      margin-bottom: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      display: none;
+      pointer-events: none;
+    }
+
+    .slot-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #333;
+    }
+
+    td.booked:hover .slot-tooltip {
+      display: block;
+    }
+    .notif-container{ position:relative; }
+    .notif-bell{ cursor:pointer; position:relative; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:500; }
+    .notif-badge{ position:absolute; top:-6px; right:-8px; background:#ff3b30; color:#fff; border-radius:10px; padding:0 6px; font-size:0.7rem; }
+    .notif-panel{ position:absolute; right:0; top:28px; width:320px; max-height:360px; overflow:auto; background:#fff; color:#333; border:1px solid #ddd; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.15); display:none; z-index:1200; }
+    .notif-item{ padding:10px 12px; border-bottom:1px solid #eee; transition:background 0.2s, opacity 0.2s; }
+    .notif-item.unread{ background:#f5faff; }
+    .notif-item.read{ opacity:0.75; }
+    .notif-item.new-open{ background:#e6f0ff; }
+    .notif-item:last-child{ border-bottom:none; }
+    .notif-title{ font-weight:600; font-size:0.9rem; }
+    .notif-meta{ font-size:0.8rem; color:#666; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Appointments</h1>
+  <nav>
+    <a href="Q-Now.html">Home</a>
+    <a href="Live_Queue.html">Live Queue</a>
+    <a href="Analytics.html">Analytics</a>
+    <a href="Search.html">Search Database</a>
+    <div class="notif-container" id="notifContainer">
+      <span class="notif-bell" id="notifBell" title="Notifications">🔔
+        <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+      </span>
+      <div class="notif-panel" id="notifPanel">
+        <div class="notif-item"><span class="notif-meta">No notifications yet</span></div>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<div class="container" id="establishmentsContainer">
+  <h2>Loading your establishments...</h2>
+</div>
+
+<button id="confirmSelectionBtn" class="btn btn-confirm">Confirm Selection</button>
+
+<div id="toast" class="toast"></div>
+
+
+<!-- modal (non-blocking) -->
+<div id="modalOverlay" style="display:none;" class="overlay" role="dialog" aria-hidden="true">
+  <div class="dialog" id="modalDialog" aria-modal="false">
+    <h4 id="modalTitle">Select slots</h4>
+    <div id="modalBody" class="small"></div>
+    <div class="row">
+      <button id="modalCancel" class="btn">Cancel</button>
+      <button id="modalProceed" class="btn btn-confirm">Proceed</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+import { getDatabase, ref, onValue, update, push } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+  authDomain: "q-now-7d98a.firebaseapp.com",
+  databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+  projectId: "q-now-7d98a",
+  storageBucket: "q-now-7d98a.firebasestorage.app",
+  messagingSenderId: "72096271594",
+  appId: "1:72096271594:web:b86777a11af444aac49b93"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const tz = "Asia/Manila";
+let currentUser = null;
+let ownerEstIds = new Set();
+let notifications = [];
+let seenKeys = { resched: new Set(), cancel: new Set(), queue: new Set(), arrival: new Set(), due: new Set() };
+let estNameCache = {};
+let patientNameCache = {};
+
+// UI elements
+const container = document.getElementById("establishmentsContainer");
+const modalOverlay = document.getElementById("modalOverlay");
+const modalTitle = document.getElementById("modalTitle");
+const modalBody = document.getElementById("modalBody");
+const modalCancel = document.getElementById("modalCancel");
+const modalProceed = document.getElementById("modalProceed");
+const confirmBtn = document.getElementById("confirmSelectionBtn");
+const notifBell = document.getElementById("notifBell");
+const notifPanel = document.getElementById("notifPanel");
+const notifBadge = document.getElementById("notifBadge");
+
+let __justOpened = new Set();
+function notifKey(n){
+  if (n && n.key) return [n.type||"", n.estId||"", n.counterId||"", n.key].join("|");
+  return [n.type||"", n.estId||"", n.counterId||"", n.title||"", n.meta||""].join("|");
+}
+notifBell?.addEventListener("click", (e)=>{
+  e.stopPropagation();
+  const opening = !(notifPanel.style.display==="block");
+  notifPanel.style.display = opening ? "block" : "none";
+  if (opening) {
+    try{
+      const store = JSON.parse(localStorage.getItem("qnow_notif_read")||"{}");
+      __justOpened = new Set();
+      notifications.forEach(n=>{ const k=notifKey(n); if(!store[k]) __justOpened.add(k); store[k]=true; n.read=true; });
+      localStorage.setItem("qnow_notif_read", JSON.stringify(store));
+    }catch(_){}
+    updateNotifUI();
+  }
+});
+document.addEventListener("click", ()=>{ if(notifPanel){ notifPanel.style.display="none"; __justOpened = new Set(); updateNotifUI(); } });
+document.addEventListener("click", ()=>{ if(notifPanel) notifPanel.style.display="none"; });
+
+/// state
+let cellMaps = {};
+let appointmentCache = {};
+let activeSelection = [];
+let activeApptContext = null;
+let selectionMode = null;
+
+// helpers
+function normalizeSlots(slots){ return slots ? (Array.isArray(slots) ? slots : Object.values(slots)) : []; }
+function escapeHtml(s){ if(!s && s!==0) return ""; return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m])); }
+function createButton(cls,label,fn){ const b=document.createElement("button"); b.className=`btn ${cls}`; b.textContent=label; b.onclick=fn; return b; }
+confirmBtn.addEventListener("click", confirmSelection);
+
+function toMinutes(t){ const [h,m] = t.split(":").map(Number); return h*60+m; }
+function areSlotsConsecutive(slots){ if(!slots.length) return false; const date=slots[0].date; if(!slots.every(s=>s.date===date)) return false; const times=slots.map(s=>s.time).sort(); for(let i=1;i<times.length;i++){ if(toMinutes(times[i])-toMinutes(times[i-1])!==30) return false; } return true; }
+
+function showToast(msg){
+  const t=document.getElementById("toast"); if(!t) return;
+  t.textContent=msg;
+  t.style.display="block";
+  clearTimeout(window.__toastTimer);
+  window.__toastTimer=setTimeout(()=>{ t.style.display="none"; },2500);
+}
+function formatTime(tm){
+  const [hStr,mStr]=String(tm||"").split(":");
+  let h=parseInt(hStr||"0",10), m=parseInt(mStr||"0",10);
+  const ampm=h>=12?"PM":"AM";
+  const hh=((h%12)||12);
+  return `${String(hh).padStart(2,"0")}:${String(m).padStart(2,"0")} ${ampm}`;
+}
+function formatSlots(slots){
+  const arr=normalizeSlots(slots);
+  return arr.map(s=>`${s.date} ${formatTime(s.time)}`).join(", ");
+}
+
+async function getAuthToken(){
+  try{
+    if(currentUser && typeof currentUser.getIdToken === "function"){
+      return await currentUser.getIdToken();
+    }
+  }catch(e){ console.warn("getIdToken failed", e); }
+  return null;
+}
+async function fetchRest(path){
+  const token = await getAuthToken();
+  const base = firebaseConfig.databaseURL.replace(/\/$/,"");
+  const url = `${base}/${path}.json${token?`?auth=${token}`:""}`;
+  const res = await fetch(url);
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
+}
+
+// auth + top-level listeners
+onAuthStateChanged(auth,user=>{
+  currentUser = user || null;
+  if(!currentUser && !window.__triedAnon){
+    window.__triedAnon = true;
+    container.innerHTML="<h2>Loading your establishments...</h2>";
+    signInAnonymously(auth).catch(()=>{});
+  }
+});
+
+onValue(
+  ref(db,"establishments"),
+  snap=>{
+    container.innerHTML="";
+    if(!snap.exists()){ container.innerHTML="<p>No establishments found.</p>"; return; }
+    let matched=false;
+    const sections=[];
+    if(currentUser){
+      snap.forEach(estSnap=>{
+        const estId=estSnap.key, estData=estSnap.val();
+        const ownerId = estData.ownerId || estData.uid || estData.createdBy;
+        if(ownerId===currentUser.uid){ matched=true; sections.push({estId,estData}); }
+      });
+    }
+    if(matched){
+      sections.forEach(s=>renderEstablishmentSection(s.estId,s.estData));
+    }else{
+      snap.forEach(estSnap=>{
+        const estId=estSnap.key, estData=estSnap.val();
+        renderEstablishmentSection(estId,estData);
+      });
+    }
+  },
+  err=>{
+    container.innerHTML="<p>Unable to load establishments. Please sign in or adjust database rules.</p>";
+    console.error(err);
+  }
+);
+
+// REST fallback for environments where Firebase SDK reads fail (e.g., file://)
+async function loadEstablishmentsViaRest(){
+  try{
+    const url = `${firebaseConfig.databaseURL}/establishments.json`;
+    const res = await fetch(url);
+    if(!res.ok){ throw new Error(`HTTP ${res.status}`); }
+    const data = await res.json();
+    container.innerHTML="";
+    if(!data){ container.innerHTML="<p>No establishments found.</p>"; return; }
+    Object.keys(data).forEach(estId=>{
+      const estData = data[estId];
+      renderEstablishmentSection(estId, estData);
+    });
+  }catch(e){
+    console.error("REST fallback failed:", e);
+    container.innerHTML="<p>Unable to load establishments. Please run via http://localhost and check Firebase rules.</p>";
+  }
+}
+
+setTimeout(()=>{
+  // If still showing the initial loading message, attempt REST fallback
+  if(container && /Loading your establishments/i.test(container.textContent||"")){
+    loadEstablishmentsViaRest();
+  }
+}, 3000);
+
+// Proactive initialization: attempt REST load immediately as well
+loadEstablishmentsViaRest();
+// render
+function renderEstablishmentSection(estId, estData){
+  const section=document.createElement("section");
+  section.className="establishment-section";
+  section.id=`section_${estId}`;
+  section.innerHTML=`
+    <h2>${escapeHtml(estData.companyName||estData.name||"Unnamed")}</h2>
+    <div class="est-meta">
+      <strong>Contact:</strong> ${escapeHtml(estData.contactPerson||"-")} • ${escapeHtml(estData.phone||estData.contactNumber||"-")} • ${escapeHtml(estData.email||"-")}
+      • <strong>Hours:</strong> ${escapeHtml(estData.hours||"08:00-17:00")}
+    </div>
+    <h3>Pending Appointment Requests</h3>
+    <div id="pending_${estId}"><em>Loading pending requests...</em></div>
+    <h3>Appointment Schedule (Next 2 Weeks)</h3>
+    <div class="schedule-legend">
+      <div class="legend-item">
+        <div class="legend-box legend-available"></div>
+        <span>Available</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box legend-occupied"></div>
+        <span>Occupied</span>
+      </div>
+    </div>
+    <div class="schedule">
+      <table>
+        <thead id="scheduleHead_${estId}"></thead>
+        <tbody id="scheduleBody_${estId}"></tbody>
+      </table>
+    </div>
+  `;
+  container.appendChild(section);
+  buildScheduleForEst(estId, estData.hours||"08:00-17:00");
+  listenAppointmentsForEst(estId);
+  listenRescheduleRequests(estId);
+  if(currentUser){
+    const ownerId = estData.ownerId || estData.uid || estData.createdBy;
+    if(ownerId===currentUser.uid) ownerEstIds.add(estId);
+  }
+  setTimeout(()=>{
+    const pendingEl=document.getElementById(`pending_${estId}`);
+    if(pendingEl && /Loading pending requests/i.test(pendingEl.innerHTML||"")){
+      loadAppointmentsViaRest(estId);
+    }
+  },2500);
+}
+
+// schedule grid
+function buildScheduleForEst(estId,hours){
+  const { openHour, closeHour, allowedDays } = parseHours(hours);
+  const startDate = new Date();
+  const days=[];
+  for(let i=0;i<14;i++){ const d=new Date(startDate); d.setDate(startDate.getDate()+i); if(allowedDays.includes(d.getDay())) days.push(d); }
+  const headEl=document.getElementById(`scheduleHead_${estId}`), bodyEl=document.getElementById(`scheduleBody_${estId}`);
+  if(!headEl||!bodyEl) return;
+
+  let headHTML="<tr><th>Time</th>";
+  days.forEach(d=>{
+    const dateStr = d.toLocaleDateString("en-PH",{month:"short",day:"numeric",timeZone:tz});
+    const dayStr = d.toLocaleDateString("en-PH",{weekday:"short",timeZone:tz});
+    headHTML+=`<th>${dateStr},${dayStr}</th>`;
+  });
+  headHTML+="</tr>"; 
+  headEl.innerHTML=headHTML;
+
+  let bodyHTML=""; cellMaps[estId]={};
+  for(let h=openHour;h<closeHour;h++){ for(let half=0;half<2;half++){
+    const slotTime=`${String(h).padStart(2,"0")}:${half===0?"00":"30"}`;
+    const timeLabel=new Date(0,0,0,h,half*30).toLocaleTimeString("en-PH",{hour:"2-digit",minute:"2-digit",hour12:true});
+    bodyHTML+=`<tr><td>${timeLabel}</td>`;
+    days.forEach(d=>{
+      const dateKey=d.toISOString().split("T")[0];
+      const cellId=`${estId}_${dateKey}_${slotTime}`;
+      bodyHTML+=`<td id="${cellId}" class="empty"><span class="slot-count">0</span></td>`;
+      cellMaps[estId][cellId]={date:dateKey,time:slotTime};
+    });
+    bodyHTML+="</tr>";
+  }}
+  bodyEl.innerHTML=bodyHTML;
+}
+
+// parse hours
+function parseHours(hours){
+  const m=(hours||"").match(/(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})/);
+  const allowedDays=[1,2,3,4,5,6]; // default: closed Sunday
+  return { openHour:m?parseInt(m[1],10):8, closeHour:m?parseInt(m[3],10):17, allowedDays };
+}
+
+// appointment listener
+function listenAppointmentsForEst(estId){
+  const pendingEl=document.getElementById(`pending_${estId}`);
+  if(!pendingEl) return;
+  const apptsRef=ref(db,`establishments/${estId}/appointments`);
+  appointmentCache[estId]=appointmentCache[estId]||{};
+
+  onValue(apptsRef,snap=>{
+    if(!cellMaps[estId]) return;
+    Object.keys(cellMaps[estId]).forEach(cid=>{
+      const c=document.getElementById(cid);
+      if(c){ c.className="empty"; c.innerHTML=""; c.dataset.apptKey=""; c.dataset.apptKeys="[]"; }
+    });
+    pendingEl.innerHTML="";
+    if(!snap.exists()){ pendingEl.innerHTML="<div>No appointment requests.</div>"; appointmentCache[estId]={}; return; }
+
+    const pendingCards=[];
+    snap.forEach(aSnap=>{
+      const appt=aSnap.val(), apptKey=aSnap.key; appointmentCache[estId][apptKey]=appt;
+      const slots=normalizeSlots(appt.slots);
+
+      if(["approved","accepted","confirmed","scheduled","rescheduled"].includes(appt.status)){
+        slots.forEach(s=>{
+          const cid=`${estId}_${s.date}_${s.time}`;
+          const cell=document.getElementById(cid);
+          if(cell){ addAppointmentToCell(cell, estId, apptKey, appt); }
+        });
+      }
+
+      if(["pending","reschedule_requested","reschedule_request"].includes(appt.status)) pendingCards.push({apptKey,appt});
+    });
+
+    pendingCards.forEach(({apptKey,appt})=>{
+      const card=document.createElement("div"); card.className="appt-card"; card.dataset.apptKey=apptKey;
+      card.innerHTML=`
+        <h3>${escapeHtml(appt.patientName||"Patient")}</h3>
+        <div class="patient-meta"><strong>Service:</strong> ${escapeHtml(appt.service||"-")}</div>
+        <div class="patient-meta"><strong>Reason:</strong> ${escapeHtml(appt.reason||"-")}</div>
+        <div class="patient-meta"><strong>Requested Slots:</strong> ${escapeHtml(formatSlots(appt.slots)||"-")}</div>
+      `;
+      const row=document.createElement("div"); row.style.marginTop="8px";
+
+      if(appt.status==="pending"){ row.appendChild(createButton("btn-accept","Accept",()=>approveAppointmentUsingRequestedSlots(estId,apptKey,appt))); row.appendChild(createButton("btn-reject","Reject",()=>rejectAppointment(estId,apptKey,appt))); }
+      if(appt.status && appt.status.includes("reschedule")){ row.appendChild(createButton("btn-reschedule","Approve Reschedule",()=>startRescheduleFlow(estId,apptKey,appt,card,true))); row.appendChild(createButton("btn-reject","Reject Reschedule",()=>rejectReschedule(estId,apptKey,appt))); }
+      if(["approved","accepted","confirmed","scheduled"].includes(appt.status)){ row.appendChild(createButton("btn-reschedule","Reschedule",()=>startRescheduleFlow(estId,apptKey,appt,card,false))); }
+
+      card.appendChild(row); pendingEl.appendChild(card);
+    });
+    startNotificationListeners();
+  });
+}
+
+function addAppointmentToCell(cell, estId, apptKey, appt){
+  cell.className="booked";
+  const patientName = escapeHtml(appt.patientName||"Patient");
+  const service = escapeHtml(appt.service||"");
+  let keys = [];
+  try{ keys = JSON.parse(cell.dataset.apptKeys||"[]"); }catch(_){}
+  if(!keys.includes(apptKey)) keys.push(apptKey);
+  cell.dataset.apptKeys = JSON.stringify(keys);
+  cell.dataset.apptKey = keys.length===1 ? apptKey : "";
+  cell.dataset.service = appt.service||"";
+  let list = cell.querySelector(".slot-list");
+  if(!list){
+    cell.innerHTML = `<span class="slot-count">0</span><div class="slot-list"></div>`;
+    list = cell.querySelector(".slot-list");
+  }
+  const item = document.createElement("div");
+  item.className = "slot-item";
+  item.textContent = service || patientName;
+  item.title = `${patientName} • ${service||"-"}`;
+  list.appendChild(item);
+  const countEl = cell.querySelector(".slot-count");
+  if(countEl){ countEl.textContent = String(keys.length); }
+  if(keys.length>1) cell.classList.add("multiple"); else cell.classList.remove("multiple");
+}
+
+async function approveAppointmentUsingRequestedSlots(estId,apptKey,appt){
+  const slots=normalizeSlots(appt.slots);
+  if(!slots.length){ alert("No requested slots found."); return; }
+  showModal(`Accept appointment for ${escapeHtml(appt.patientName||"Patient")}`, `Requested slots:<br>${escapeHtml(formatSlots(slots))}`, ()=>{}, { cancelLabel:"Cancel", showProceed:true });
+  modalProceed.onclick=async ()=>{
+    closeModal();
+    const slotsObj={}; slots.forEach((s,i)=>slotsObj[i]=s);
+    const updates={}; const now=Date.now();
+    updates[`establishments/${estId}/appointments/${apptKey}/slots`]=slotsObj;
+    updates[`establishments/${estId}/appointments/${apptKey}/status`]="approved";
+    updates[`establishments/${estId}/appointments/${apptKey}/approvedAt`]=now;
+    if(appt.patientId){
+      updates[`patients/${appt.patientId}/appointments/${apptKey}/slots`]=slotsObj;
+      updates[`patients/${appt.patientId}/appointments/${apptKey}/status`]="approved";
+      const notifKey=push(ref(db,`patients/${appt.patientId}/notifications`)).key;
+      updates[`patients/${appt.patientId}/notifications/${notifKey}`]={
+        type:"appointment", estId, patientName:appt.patientName||"Unknown", service:appt.service||"-",
+        message:"Your appointment has been accepted.", timestamp:now
+      };
+    }
+    try{
+      await update(ref(db),updates);
+      showToast("Appointment accepted");
+    }catch(e){
+      console.error(e);
+      alert("Failed to save appointment.");
+    }
+  };
+}
+
+async function loadAppointmentsViaRest(estId){
+  try{
+    const data = await fetchRest(`establishments/${estId}/appointments`);
+    const pendingEl=document.getElementById(`pending_${estId}`);
+    if(!pendingEl) return;
+    // Reset grid
+    if(cellMaps[estId]){
+      Object.keys(cellMaps[estId]).forEach(cid=>{
+        const c=document.getElementById(cid);
+        if(c){ c.className="empty"; c.innerHTML=""; c.dataset.apptKey=""; c.dataset.service=""; }
+      });
+    }
+    const pendingCards=[];
+    if(data){
+      Object.keys(data).forEach(apptKey=>{
+        const appt = data[apptKey];
+        const slots = normalizeSlots(appt.slots);
+        if(["approved","accepted","confirmed","scheduled","rescheduled"].includes(appt.status)){
+          slots.forEach(s=>{
+            const cid=`${estId}_${s.date}_${s.time}`;
+            const cell=document.getElementById(cid);
+            if(cell){
+              cell.className="booked";
+              const patientName = escapeHtml(appt.patientName||"Patient");
+              const service = escapeHtml(appt.service||"");
+              cell.innerHTML = `<div class="slot-tooltip">${patientName}<br>${service}</div>`;
+              cell.dataset.apptKey=apptKey;
+              cell.dataset.service=appt.service||"";
+            }
+          });
+        }
+        if(["pending","reschedule_requested","reschedule_request"].includes(appt.status)){
+          pendingCards.push({apptKey,appt});
+        }
+      });
+    }
+    pendingEl.innerHTML="";
+    if(!pendingCards.length){ pendingEl.innerHTML="<div>No appointment requests.</div>"; return; }
+    pendingCards.forEach(({apptKey,appt})=>{
+      const card=document.createElement("div"); card.className="appt-card"; card.dataset.apptKey=apptKey;
+      card.innerHTML=`
+        <h3>${escapeHtml(appt.patientName||"Patient")}</h3>
+        <div class="patient-meta"><strong>Service:</strong> ${escapeHtml(appt.service||"-")}</div>
+        <div class="patient-meta"><strong>Reason:</strong> ${escapeHtml(appt.reason||"-")}</div>
+        <div class="patient-meta"><strong>Requested Slots:</strong> ${escapeHtml(formatSlots(appt.slots)||"-")}</div>
+      `;
+      const row=document.createElement("div"); row.style.marginTop="8px";
+      if(appt.status==="pending"){ row.appendChild(createButton("btn-accept","Accept",()=>approveAppointmentUsingRequestedSlots(estId,apptKey,appt))); row.appendChild(createButton("btn-reject","Reject",()=>rejectAppointment(estId,apptKey,appt))); }
+      if(appt.status && appt.status.includes("reschedule")){ row.appendChild(createButton("btn-reschedule","Approve Reschedule",()=>startRescheduleFlow(estId,apptKey,appt,card,true))); row.appendChild(createButton("btn-reject","Reject Reschedule",()=>rejectReschedule(estId,apptKey,appt))); }
+      pendingEl.appendChild(row); pendingEl.appendChild(card);
+    });
+  }catch(e){
+    console.error("REST appointments fallback failed:", e);
+  }
+}
+
+// flow starters
+function startAcceptFlow(estId,apptKey,appt,cardEl){
+  activeSelection=[]; activeApptContext={estId,apptKey,appt,cardEl,isReschedule:false}; selectionMode="accept";
+  confirmBtn.style.display="inline-block";
+  showModal(`Accept appointment for ${escapeHtml(appt.patientName||"Patient")}`, `Click desired slot(s) on the grid, then click Confirm Selection.`,()=>{}, { cancelLabel:"OK", showProceed:false });
+}
+function startRescheduleFlow(estId,apptKey,appt,cardEl,patientRequested){
+  activeSelection=[]; activeApptContext={estId,apptKey,appt,cardEl,isReschedule:true,patientRequested:!!patientRequested}; selectionMode="reschedule";
+  confirmBtn.style.display="inline-block";
+  showModal(patientRequested?`Approve reschedule for ${escapeHtml(appt.patientName||"Patient")}`:`Reschedule appointment`,
+    `Choose ${normalizeSlots(appt.slots).length||1} slot(s). Click slots on the grid, then click Confirm Selection.`,
+    ()=>{}, { cancelLabel:"OK", showProceed:false });
+}
+
+// slot selection
+document.addEventListener("click",(e)=>{
+  const td=e.target.closest("td"); if(!td) return; if(modalOverlay.contains(e.target)) return;
+  const [estId,date,time]=td.id.split("_"); if(!estId||!date||!time) return;
+
+  if(!activeApptContext){
+    if(td.classList.contains("booked")){
+      let keys=[]; try{ keys=JSON.parse(td.dataset.apptKeys||"[]"); }catch(_){}
+      if(keys.length===1 && td.dataset.apptKey){
+        const appt=appointmentCache[estId]?.[td.dataset.apptKey];
+        if(appt) openBookedOptions(estId,td.dataset.apptKey,appt);
+      }else if(keys.length>1){
+        openMultiBookedOptions(estId, td, keys);
+      }
+    }
+    return;
+  }
+
+  if(selectionMode==="accept" && activeApptContext.appt?.requestedDate){ if(date!==activeApptContext.appt.requestedDate) return; }
+
+  if(td.classList.contains("booked") && td.dataset.apptKey){
+    const existing=appointmentCache[estId]?.[td.dataset.apptKey];
+    const existingService=(existing&&existing.service)||"";
+    const currentService=(activeApptContext.appt&&activeApptContext.appt.service)||"";
+    if(existingService && currentService && existingService.toLowerCase()===currentService.toLowerCase()) return;
+  }
+
+  toggleSlot(td.id);
+});
+
+function openMultiBookedOptions(estId, td, keys){
+  const items = keys.map(k=>{
+    const appt = appointmentCache[estId]?.[k];
+    const name = appt?.patientName || "Patient";
+    const svc = appt?.service || "-";
+    return { k, title: `${name} • ${svc}` };
+  });
+  const body = items.map((it,i)=>`<div><button class="btn" data-k="${escapeHtml(it.k)}">Manage: ${escapeHtml(it.title)}</button></div>`).join("");
+  showModal("Select appointment", body, ()=>{}, { cancelLabel:"Close", showProceed:false });
+  setTimeout(()=>{
+    const btns = modalBody.querySelectorAll("button[data-k]");
+    btns.forEach(b=>{
+      b.addEventListener("click", ()=>{
+        const k = b.getAttribute("data-k");
+        const appt = appointmentCache[estId]?.[k];
+        closeModal();
+        if(appt) openBookedOptions(estId, k, appt);
+      });
+    });
+  }, 0);
+}
+
+function toggleSlot(cellId){
+  const td=document.getElementById(cellId); if(!td) return;
+  td.classList.toggle("outline-selected");
+  if(td.classList.contains("outline-selected")) activeSelection.push(cellId);
+  else activeSelection=activeSelection.filter(id=>id!==cellId);
+  confirmBtn.style.display=activeSelection.length?"inline-block":"none";
+}
+
+// confirm selection
+async function confirmSelection(){
+  if(!activeApptContext) return;
+  const { estId, apptKey, appt, isReschedule }=activeApptContext;
+  if(!activeSelection.length){ alert("Select at least one slot."); confirmBtn.style.display="none"; activeApptContext=null; selectionMode=null; return; }
+
+  const newSlots=activeSelection.map(cid=>cellMaps[estId]&&cellMaps[estId][cid]).filter(Boolean).sort((a,b)=>a.time>b.time?1:-1);
+  const originalSlots=normalizeSlots(appt.slots);
+
+  if(originalSlots.length>1){ if(newSlots.length!==originalSlots.length){ alert(`Requires exactly ${originalSlots.length} slots.`); return; } if(!areSlotsConsecutive(newSlots)){ alert("Slots must be consecutive."); return; } }
+  else if(isReschedule && newSlots.length>1 && !areSlotsConsecutive(newSlots)){ alert("Slots must be consecutive."); return; }
+
+  const slotsObj={}; newSlots.forEach((s,i)=>slotsObj[i]=s);
+  const updates={}; const now=Date.now();
+  updates[`establishments/${estId}/appointments/${apptKey}/slots`]=slotsObj;
+  updates[`establishments/${estId}/appointments/${apptKey}/status`]=isReschedule?"rescheduled":"approved";
+  updates[`establishments/${estId}/appointments/${apptKey}/${isReschedule?"rescheduledAt":"approvedAt"}`]=now;
+  if(appt.patientId){ updates[`patients/${appt.patientId}/appointments/${apptKey}/slots`]=slotsObj; updates[`patients/${appt.patientId}/appointments/${apptKey}/status`]=isReschedule?"rescheduled":"approved"; const notifKey=push(ref(db,`patients/${appt.patientId}/notifications`)).key; updates[`patients/${appt.patientId}/notifications/${notifKey}`]={ type:"appointment", estId, patientName:appt.patientName||"Unknown", service:appt.service||"-", message:isReschedule?"Your appointment has been rescheduled.":"Your appointment has been accepted.", timestamp:now }; }
+
+  try{ await update(ref(db),updates); closeModal(); activeApptContext=null; selectionMode=null; confirmBtn.style.display="none"; alert("Appointment updated successfully."); }catch(e){ console.error(e); alert("Failed to save appointment."); }
+}
+
+// cancel/reject/reschedule
+async function cancelAppt(estId, apptKey, appt) {
+  const reason = prompt(`Cancel appointment for ${appt.patientName || "this patient"}? Enter reason:`, "");
+  if (!reason){ 
+    clearInteractionState(); 
+    return alert("Cancellation reason required."); 
+  }
+
+  try {
+    const now = Date.now();
+    const updates = {};
+    updates[`establishments/${estId}/appointments/${apptKey}/status`] = "cancelled";
+    updates[`establishments/${estId}/appointments/${apptKey}/cancelledReason`] = reason;
+    updates[`establishments/${estId}/appointments/${apptKey}/cancelledAt`] = now;
+
+    if (appt.patientId) {
+      updates[`patients/${appt.patientId}/appointments/${apptKey}/status`] = "cancelled";
+      updates[`patients/${appt.patientId}/appointments/${apptKey}/cancelledReason`] = reason;
+      updates[`patients/${appt.patientId}/appointments/${apptKey}/cancelledAt`] = now;
+
+      const notifKey = push(ref(db, `patients/${appt.patientId}/notifications`)).key;
+      updates[`patients/${appt.patientId}/notifications/${notifKey}`] = {
+        type: "appointment",
+        estId,
+        message: "Appointment cancelled by establishment",
+        reason,
+        timestamp: now
+      };
+    }
+
+    await update(ref(db), updates);
+    
+    // Reset selection and modal state to prevent leftover slot selection
+    activeSelection = [];
+    activeApptContext = null;
+    selectionMode = null;
+    confirmBtn.style.display = "none";
+
+    alert("Appointment cancelled.");
+  } catch (e) {
+    console.error(e);
+    alert("Failed to cancel.");
+  }
+}
+
+async function rejectAppointment(estId,apptKey,appt){ const reason=prompt(`Reject appointment for ${appt.patientName||"this patient"}?\nRequested: ${formatSlots(appt.slots)}\nEnter reason:`,""); if(!reason) return alert("Rejection reason required."); try{ const now=Date.now(); const updates={}; updates[`establishments/${estId}/appointments/${apptKey}/status`]="rejected"; updates[`establishments/${estId}/appointments/${apptKey}/rejectedReason`]=reason; updates[`establishments/${estId}/appointments/${apptKey}/rejectedAt`]=now; if(appt.patientId){ updates[`patients/${appt.patientId}/appointments/${apptKey}/status`]="rejected"; updates[`patients/${appt.patientId}/appointments/${apptKey}/rejectedReason`]=reason; updates[`patients/${appt.patientId}/appointments/${apptKey}/rejectedAt`]=now; const notifKey=push(ref(db,`patients/${appt.patientId}/notifications`)).key; updates[`patients/${appt.patientId}/notifications/${notifKey}`]={ type:"appointment", estId, message:"Appointment request rejected by establishment", reason, timestamp:now }; } await update(ref(db),updates); showToast("Appointment rejected"); }catch(e){ console.error(e); alert("Failed to reject."); } }
+async function rejectReschedule(estId,apptKey,appt){ const reason=prompt("Reason for rejecting reschedule?"); if(!reason) return; try{ const now=Date.now(); const updates={}; updates[`establishments/${estId}/appointments/${apptKey}/status`]="approved"; updates[`establishments/${estId}/appointments/${apptKey}/rescheduleRejectedReason`]=reason; updates[`establishments/${estId}/rescheduleRequests/${apptKey}`]=null; if(appt.patientId){ updates[`patients/${appt.patientId}/appointments/${apptKey}/status`]="approved"; const notifKey=push(ref(db,`patients/${appt.patientId}/notifications`)).key; updates[`patients/${appt.patientId}/notifications/${notifKey}`]={ type:"appointment", estId, message:"Your reschedule request was rejected.", reason, timestamp:now }; } await update(ref(db),updates); alert("Reschedule rejected."); }catch(e){ console.error(e); alert("Failed to reject reschedule."); } }
+
+// reschedule requests listener
+function listenRescheduleRequests(estId){
+  const reqRef=ref(db,`establishments/${estId}/rescheduleRequests`);
+  onValue(reqRef,snap=>{ if(!snap.exists()) return; snap.forEach(reqSnap=>{ const req=reqSnap.val(); const apptKey=req?.appointmentId; if(!req||req.status!=="pending") return; const apptRef=ref(db,`establishments/${estId}/appointments/${apptKey}`); onValue(apptRef,apptSnap=>{ const appt=apptSnap.val(); if(!appt) return; if(appt.status==="approved") update(apptRef,{status:"reschedule_requested"}); },{onlyOnce:true}); }); });
+}
+
+// manage booked modal
+function openBookedOptions(estId,apptKey,appt){
+  activeApptContext={estId,apptKey,appt,cardEl:null};
+  showModal(`Manage appointment`,`<b>${escapeHtml(appt.patientName||"Patient")}</b><br><small>Service: ${escapeHtml(appt.service||"-")}</small><br><br>Choose an action: Cancel or Reschedule (admin).`,()=>{}, { cancelLabel:"Cancel Appointment", showProceed:true });
+  modalProceed.textContent="Reschedule";
+  modalCancel.onclick=()=>{ 
+    closeModal(); 
+    clearInteractionState();
+    cancelAppt(estId,apptKey,appt); 
+  };
+  modalProceed.onclick=()=>{ closeModal(); startRescheduleFlow(estId,apptKey,appt,null,false); };
+}
+
+// modal helpers
+function showModal(title,body,onAfterClose,options={}){ const {cancelLabel="OK",showProceed=false}=options; modalTitle.textContent=title; modalBody.innerHTML=`<div class="small">${body}</div>`; modalOverlay.style.display="flex"; modalOverlay.setAttribute("aria-hidden","false"); modalCancel.textContent=cancelLabel; modalCancel.style.display="inline-block"; modalProceed.style.display=showProceed?"inline-block":"none"; modalCancel.onclick=()=>{ closeModal(); if(typeof onAfterClose==="function") onAfterClose(); }; modalProceed.onclick=()=>{ if(typeof onAfterClose==="function") onAfterClose(); closeModal(); }; }
+function closeModal(){ modalOverlay.style.display="none"; modalOverlay.setAttribute("aria-hidden","true"); modalBody.innerHTML=""; modalCancel.textContent="Cancel"; modalProceed.textContent="Proceed"; modalCancel.style.display="inline-block"; modalProceed.style.display="inline-block"; }
+function clearInteractionState(){ activeSelection=[]; activeApptContext=null; selectionMode=null; confirmBtn.style.display="none"; }
+
+modalOverlay.addEventListener("click",e=>{ if(e.target===modalOverlay) closeModal(); });
+
+// ======================== NO-SHOW LOGIC ========================
+
+async function reportNoShow(estId, apptKey, appt) {
+  if (!appt.patientId) {
+    alert("Cannot report no-show for appointments without a registered patient.");
+    return;
+  }
+
+  const patientId = appt.patientId;
+  const now = Date.now();
+  const twentyMinutes = 20 * 60 * 1000;
+  const expiresAt = now + twentyMinutes;
+
+  try {
+    const [estSnap, apptsRef] = await Promise.all([
+      db.ref(`establishments/${estId}`).child("companyName").once("value"),
+      db.ref()
+    ]);
+
+    const estName = estSnap.val() || "Unknown Establishment";
+
+    const updates = {};
+
+    // Create timer record
+    updates[`establishments/${estId}/appointments/${apptKey}/noShowTimer`] = {
+      patientId,
+      apptKey,
+      estId,
+      estName,
+      service: appt.service || "-",
+      createdAt: now,
+      expiresAt,
+      active: true
+    };
+
+    // Send first warning notification
+    const notifKey = db.ref(`patients/${patientId}/notifications`).push().key;
+    updates[`patients/${patientId}/notifications/${notifKey}`] = {
+      type: "appointment",
+      estId,
+      estName,
+      message: "⚠ You have been marked as a no-show. Please contact the establishment within 20 minutes to explain.",
+      timestamp: now
+    };
+
+    await db.ref().update(updates);
+
+    alert("No-show reported. 20-minute timer started.");
+    startNoShowCountdown(estId, apptKey, patientId, estName, expiresAt);
+  } catch (error) {
+    console.error("Error reporting no-show:", error);
+    alert("Failed to report no-show: " + error.message);
+  }
+}
+
+function startNoShowCountdown(estId, apptKey, patientId, estName, expiresAt) {
+  const timerDisplay = document.getElementById("noShowTimerDisplay");
+
+  // Clear existing interval if any
+  if (noShowIntervals[apptKey]) {
+    clearInterval(noShowIntervals[apptKey]);
+  }
+
+  noShowIntervals[apptKey] = setInterval(async () => {
+    const now = Date.now();
+    const remaining = expiresAt - now;
+
+    if (remaining > 0) {
+      const mins = Math.floor(remaining / 60000);
+      const secs = Math.floor((remaining % 60000) / 1000);
+      timerDisplay.textContent = `No-Show Timer: ${mins}:${secs.toString().padStart(2, "0")}`;
+      timerDisplay.style.display = "block";
+      return;
+    }
+
+    // Time expired → finalize no-show
+    clearInterval(noShowIntervals[apptKey]);
+    delete noShowIntervals[apptKey];
+    timerDisplay.style.display = "none";
+
+    await finalizeNoShowAppointment(estId, apptKey, patientId, estName);
+  }, 1000);
+}
+
+async function finalizeNoShowAppointment(estId, apptKey, patientId, estName) {
+  try {
+    const timerRef = db.ref(`establishments/${estId}/appointments/${apptKey}/noShowTimer`);
+    const timerSnap = await timerRef.once("value");
+
+    if (!timerSnap.exists()) return;
+
+    const updates = {};
+
+    // Update appointment status
+    updates[`establishments/${estId}/appointments/${apptKey}/status`] = "no_show";
+    updates[`establishments/${estId}/appointments/${apptKey}/noShowReportedAt`] = Date.now();
+    updates[`establishments/${estId}/appointments/${apptKey}/noShowTimer`] = null;
+
+    // Update patient record
+    updates[`patients/${patientId}/appointments/${apptKey}/status`] = "no_show";
+    updates[`patients/${patientId}/appointments/${apptKey}/noShowReportedAt`] = Date.now();
+
+    // Send final notification
+    const notifKey = db.ref(`patients/${patientId}/notifications`).push().key;
+    updates[`patients/${patientId}/notifications/${notifKey}`] = {
+      type: "appointment",
+      estId,
+      estName,
+      message: "❌ Your appointment has been marked as a final no-show.",
+      timestamp: Date.now()
+    };
+
+    await db.ref().update(updates);
+
+    console.log("No-show finalized for appointment:", apptKey);
+  } catch (error) {
+    console.error("Error finalizing no-show:", error);
+  }
+}
+
+async function cancelNoShowTimer(estId, apptKey, patientId, estName) {
+  try {
+    clearInterval(noShowIntervals[apptKey]);
+    delete noShowIntervals[apptKey];
+
+    const updates = {};
+    updates[`establishments/${estId}/appointments/${apptKey}/noShowTimer`] = null;
+
+    // Send cancellation notification
+    const notifKey = db.ref(`patients/${patientId}/notifications`).push().key;
+    updates[`patients/${patientId}/notifications/${notifKey}`] = {
+      type: "appointment",
+      estId,
+      estName,
+      message: "ℹ️ Your no-show report has been cancelled. Thank you for responding promptly!",
+      timestamp: Date.now()
+    };
+
+    await db.ref().update(updates);
+
+    const timerDisplay = document.getElementById("noShowTimerDisplay");
+    timerDisplay.style.display = "none";
+
+    alert("No-show timer cancelled.");
+  } catch (error) {
+    console.error("Error cancelling no-show timer:", error);
+  }
+}
+
+// Restore active no-show timers on page load
+function restoreNoShowTimers() {
+  const estIds = Object.keys(cellMaps);
+  
+  estIds.forEach(estId => {
+    db.ref(`establishments/${estId}/appointments`)
+      .orderByChild("status")
+      .equalTo("approved")
+      .once("value")
+      .then(snap => {
+        if (!snap.exists()) return;
+
+        snap.forEach(apptSnap => {
+          const appt = apptSnap.val();
+          const apptKey = apptSnap.key;
+
+          if (appt.noShowTimer && appt.noShowTimer.active && appt.noShowTimer.expiresAt > Date.now()) {
+            startNoShowCountdown(
+              estId,
+              apptKey,
+              appt.noShowTimer.patientId,
+              appt.noShowTimer.estName,
+              appt.noShowTimer.expiresAt
+            );
+          }
+        });
+      });
+  });
+}
+
+// Call after establishments are loaded
+setTimeout(() => {
+  restoreNoShowTimers();
+}, 2000);
+
+// =============== Notifications (dropdown) ===============
+function startNotificationListeners(){
+  if(startNotificationListeners.__started) return;
+  const estIds = ownerEstIds.size ? Array.from(ownerEstIds) : Object.keys(cellMaps);
+  if(!estIds.length) return;
+  startNotificationListeners.__started = true;
+  estIds.forEach(estId=>{
+    onValue(ref(db,`establishments/${estId}/rescheduleRequests`), snap=>{
+      if(!snap.exists()) return updateNotifUI();
+      snap.forEach(rs=>{
+        const v = rs.val();
+        const key = `${estId}|resched|${rs.key}`;
+        if(v && v.status==="pending" && !seenKeys.resched.has(key)){
+          seenKeys.resched.add(key);
+          const item = { type:"reschedule", estId, title:"Appointment Reschedule", meta:`Loading...`, msg:`Reschedule requested`, ts:Date.now() };
+          notifications.unshift(item);
+          resolveEstName(estId, name => { item.meta = name; updateNotifUI(); });
+          // try enrich with patient name from appointment
+          onValue(ref(db,`establishments/${estId}/appointments/${rs.key}`), apSnap=>{
+            if(apSnap.exists()){
+              const a = apSnap.val();
+              const pname = a?.patientName; const pid = a?.patientId;
+              if(pname){ item.msg = `Reschedule requested by ${pname}`; updateNotifUI(); }
+              else if(pid){ resolvePatientName(pid, n=>{ item.msg = `Reschedule requested by ${n}`; updateNotifUI(); }); }
+            }
+          }, { onlyOnce:true });
+        }
+      });
+      updateNotifUI();
+    });
+    onValue(ref(db,`establishments/${estId}/appointments`), snap=>{
+      if(!snap.exists()) return updateNotifUI();
+      const appts = [];
+      snap.forEach(as=>{
+        const a = as.val(); a.__key = as.key; appts.push(a);
+        if(a && a.status==="cancelled" && a.cancelledAt){
+          const key = `${estId}|cancel|${as.key}`;
+          if(!seenKeys.cancel.has(key)){
+            seenKeys.cancel.add(key);
+            const item = { type:"cancel", estId, title:"Appointment Cancelled", meta:`${a.patientName||"Patient"}`, msg:`${a.service||"-"}`, ts:a.cancelledAt };
+            notifications.unshift(item);
+            resolveEstName(estId, name => { item.meta = `${a.patientName||"Patient"} — ${name}`; updateNotifUI(); });
+          }
+        }
+      });
+      startAppointmentDueCheck(estId, appts);
+      updateNotifUI();
+    });
+    onValue(ref(db,`establishments/${estId}/counters`), snap=>{
+      if(!snap.exists()) return updateNotifUI();
+      snap.forEach(counterSnap=>{
+        const counterId = counterSnap.key;
+        const counterName = (counterSnap.val()&&counterSnap.val().name)||counterId;
+        const reqSnap = counterSnap.child("requests");
+        if(!reqSnap.exists()) return;
+        reqSnap.forEach(r=>{
+          const req = r.val();
+          if(req && req.status==="pending"){
+            const key = `${estId}|queue|${counterId}|${r.key}`;
+            if(!seenKeys.queue.has(key)){
+              seenKeys.queue.add(key);
+              const pname = req.patientName || "Unknown";
+              const item = { type:"queue", estId, counterId, title:"Queue Request", meta:`${counterName}`, msg:`From ${pname}`, ts:req.createdAt||Date.now() };
+              notifications.unshift(item);
+              resolveEstName(estId, name => { item.meta = `${name} — ${counterName}`; updateNotifUI(); });
+            }
+          }
+        });
+      });
+      updateNotifUI();
+    });
+    onValue(ref(db,`establishments/${estId}/arrivals`), snap=>{
+      if(!snap.exists()) return updateNotifUI();
+      snap.forEach(a=>{
+        const key = `${estId}|arrival|${a.key}`;
+        const v = a.val();
+        if(v && !seenKeys.arrival.has(key)){
+          seenKeys.arrival.add(key);
+          const item = { type:"arrival", estId, title:"Patient Arrived", meta:`Loading...`, msg:`Arrival verified`, ts:v.timestamp||Date.now() };
+          notifications.unshift(item);
+          resolveEstName(estId, name => { item.meta = name; updateNotifUI(); });
+          if(v.uid){ resolvePatientName(v.uid, n=>{ item.msg = `${n} has arrived`; updateNotifUI(); }); }
+        }
+      });
+      updateNotifUI();
+    });
+  });
+}
+
+function startAppointmentDueCheck(estId, appts){
+  if(!startAppointmentDueCheck.__interval){
+    startAppointmentDueCheck.__interval = setInterval(()=>{
+      try{
+        const now = new Date();
+        const yyyy = now.toISOString().split("T")[0];
+        const hh = String(now.getHours()).padStart(2,"0");
+        const mm = now.getMinutes() < 30 ? "00" : "30";
+        const time = `${hh}:${mm}`;
+        (startAppointmentDueCheck.__list||[]).forEach(({estId: eid, list})=>{
+          list.forEach(a=>{
+            if(["approved","accepted","confirmed","scheduled","rescheduled"].includes(a.status)){
+              const slots = normalizeSlots(a.slots);
+              slots.forEach(s=>{
+                if(s.date===yyyy && s.time===time){
+                  const key = `${eid}|due|${a.__key}|${s.date}|${s.time}`;
+                  if(!seenKeys.due.has(key)){
+                    seenKeys.due.add(key);
+                    notifications.unshift({ type:"appointment", estId:eid, title:"Appointment Now", meta:`${a.patientName||"Patient"}`, msg:`${a.service||"-"} at ${formatTime(s.time)}`, ts:Date.now() });
+                  }
+                }
+              });
+            }
+          });
+        });
+        updateNotifUI();
+      }catch(_){}
+    }, 60000);
+  }
+  startAppointmentDueCheck.__list = startAppointmentDueCheck.__list||[];
+  const idx = startAppointmentDueCheck.__list.findIndex(x=>x.estId===estId);
+  if(idx>=0) startAppointmentDueCheck.__list[idx] = { estId, list: appts };
+  else startAppointmentDueCheck.__list.push({ estId, list: appts });
+}
+
+function updateNotifUI(){
+  if(!notifPanel||!notifBadge) return;
+  // mark read from localStorage
+  try{
+    const readKeys = JSON.parse(localStorage.getItem("qnow_notif_read")||"{}");
+    notifications.forEach(n=>{ const k=[n.type||"",n.estId||"",n.counterId||"",n.msg||"",n.ts||""].join("|"); if(readKeys[k]) n.read=true; });
+  }catch(_){}
+  // latest first
+  const sorted = notifications.slice().sort((a,b)=> (b.ts||0) - (a.ts||0));
+  const list = sorted.slice(0,50);
+  notifPanel.innerHTML = list.length
+    ? list.map((n,idx)=>{ const k=notifKey(n); const cls = n.read ? (__justOpened.has(k) ? "new-open" : "read") : "unread"; return `<div class="notif-item ${cls}" data-idx="${idx}" data-type="${n.type||''}" data-est="${n.estId||''}" data-counter="${n.counterId||''}" data-key="${n.key||''}"><div class="notif-title">${n.title}</div><div class="notif-meta">${n.meta}</div><div>${n.msg}</div></div>`; }).join("")
+    : `<div class="notif-item"><span class="notif-meta">No notifications</span></div>`;
+  const unread = notifications.filter(n=>!n.read).length;
+  notifBadge.textContent = String(unread);
+  notifBadge.style.display = unread ? "inline-block" : "none";
+  // Click navigation
+  notifPanel.querySelectorAll(".notif-item[data-idx]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      // mark read to localStorage
+      try{
+        const idx = Number(el.getAttribute("data-idx"));
+        const itm = list[idx];
+        const k = notifKey(itm);
+        const store = JSON.parse(localStorage.getItem("qnow_notif_read")||"{}");
+        store[k]=true; localStorage.setItem("qnow_notif_read", JSON.stringify(store));
+        itm.read = true;
+        updateNotifUI();
+      }catch(_){}
+      const t = el.getAttribute("data-type")||"";
+      const estId = el.getAttribute("data-est")||"";
+      const counterId = el.getAttribute("data-counter")||"";
+      if(t==="queue" || t==="arrival"){
+        if(estId && counterId){
+          window.location.href = `Counter.html?estId=${encodeURIComponent(estId)}&counterId=${encodeURIComponent(counterId)}`;
+        }else{
+          window.location.href = `Live_Queue.html`;
+        }
+      }else{
+        window.location.href = `Appointments.html`;
+      }
+    });
+  });
+}
+
+function resolveEstName(estId, cb){
+  if(!estId || typeof cb!=="function") return;
+  if(estNameCache[estId]){ cb(estNameCache[estId]); return; }
+  onValue(ref(db,`establishments/${estId}/companyName`), snap=>{
+    let name = snap.exists()?snap.val():null;
+    if(name){ estNameCache[estId]=name; cb(name); }
+    else{
+      onValue(ref(db,`establishments/${estId}/name`), s2=>{
+        let nm = s2.exists()?s2.val():("Establishment");
+        estNameCache[estId]=nm; cb(nm);
+      }, { onlyOnce:true });
+    }
+  }, { onlyOnce:true });
+}
+
+function resolvePatientName(uid, cb){
+  if(!uid || typeof cb!=="function") return;
+  if(patientNameCache[uid]){ cb(patientNameCache[uid]); return; }
+  onValue(ref(db,`patients/${uid}/name`), snap=>{
+    let name = snap.exists()?snap.val():null;
+    if(name){ patientNameCache[uid]=name; cb(name); }
+    else{ cb("Patient"); }
+  }, { onlyOnce:true });
+}
+</script>
+</body>
+</html>

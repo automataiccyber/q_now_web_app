@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Document Dropbox | Q-Now</title>
+  <style>
+    :root {
+      --primary: #0077cc;
+      --primary-dark: #005fa3;
+      --accent: #00aaff;
+      --light-bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --text: #333;
+      --text-light: #555;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      --radius: 10px;
+      --transition: all 0.25s ease;
+      --success: #28a745;
+      --danger: #dc3545;
+      --warning: #ffc107;
+      --info: #17a2b8;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--text);
+      animation: fadeIn 0.5s ease;
+      padding-top: 65px;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    header h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      letter-spacing: 0.3px;
+      flex: 0 0 auto;
+    }
+
+    header a {
+      color: white;
+      text-decoration: none;
+      transition: var(--transition);
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    header a:hover {
+      color: var(--accent);
+    }
+
+    nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+    }
+
+    nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 30px;
+      box-shadow: var(--shadow);
+      animation: fadeUp 0.6s ease;
+    }
+
+    h1 {
+      color: var(--primary-dark);
+      margin-top: 0;
+      margin-bottom: 5px;
+    }
+
+    p {
+      color: var(--text-light);
+      margin-bottom: 20px;
+    }
+
+    /* Patient Info Section */
+    .patient-info-section {
+      background: linear-gradient(135deg, var(--light-bg) 0%, #f0f8ff 100%);
+      border: 2px solid var(--primary);
+      border-radius: var(--radius);
+      padding: 25px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .patient-info-section.placeholder {
+      opacity: 0.6;
+      border-style: dashed;
+    }
+
+    .patient-info-left {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex: 1;
+    }
+
+    .patient-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
+    }
+
+    .patient-details {
+      flex: 1;
+    }
+
+    .patient-name {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+
+    .patient-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+
+    .patient-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .patient-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-back {
+      padding: 10px 18px;
+      background: var(--info);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-back:hover {
+      background: #117a8b;
+      transform: translateY(-2px);
+    }
+
+    .btn-back:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .section-title {
+      color: var(--primary-dark);
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary);
+      margin-top: 25px;
+    }
+
+    .section-title:first-of-type {
+      margin-top: 0;
+    }
+
+    .placeholder-notice {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      color: #856404;
+      padding: 12px 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      font-size: 0.9rem;
+    }
+
+    .upload-section {
+      background: var(--light-bg);
+      border: 2px dashed var(--primary);
+      border-radius: var(--radius);
+      padding: 30px;
+      text-align: center;
+      margin-bottom: 30px;
+      transition: var(--transition);
+    }
+
+    .upload-section:hover {
+      border-color: var(--accent);
+      background: #f0f8ff;
+    }
+
+    .upload-section.disabled {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .upload-section input[type="file"] {
+      display: none;
+    }
+
+    .upload-label {
+      cursor: pointer;
+      display: inline-block;
+      padding: 15px 30px;
+      background: var(--primary);
+      color: white;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .upload-label:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .upload-label.disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .upload-info {
+      color: var(--text-light);
+      font-size: 0.9rem;
+      margin-top: 12px;
+    }
+
+    .document-type-select {
+      padding: 12px 12px;
+      font-size: 1rem;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      outline: none;
+      transition: var(--transition);
+      background: white;
+      margin-bottom: 15px;
+    }
+
+    .document-type-select:focus {
+      border-color: var(--primary);
+    }
+
+    .document-type-select:disabled {
+      background: #f0f0f0;
+      cursor: not-allowed;
+    }
+
+    .documents-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .document-card {
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: var(--radius);
+      padding: 15px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .document-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .doc-icon {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+    }
+
+    .doc-name {
+      font-weight: 600;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+      word-break: break-word;
+      font-size: 0.95rem;
+    }
+
+    .doc-meta {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+
+    .doc-type {
+      display: inline-block;
+      background: var(--light-bg);
+      color: var(--primary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+
+    .doc-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      font-weight: 500;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn.download {
+      background: var(--success);
+      color: white;
+      flex: 1;
+    }
+
+    .btn.download:hover {
+      background: #218838;
+      transform: translateY(-2px);
+    }
+
+    .btn.delete {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn.delete:hover {
+      background: #c82333;
+      transform: translateY(-2px);
+    }
+
+    .no-documents {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-light);
+      font-style: italic;
+    }
+
+    .filter-section {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-btn {
+      padding: 8px 16px;
+      border: 2px solid var(--primary);
+      background: white;
+      color: var(--primary);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .filter-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .filter-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    .filter-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-box {
+      background: var(--light-bg);
+      border-left: 4px solid var(--primary);
+      padding: 12px 15px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--primary-dark);
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-top: 4px;
+    }
+
+    .upload-progress {
+      display: none;
+      margin-top: 15px;
+      padding: 12px;
+      background: var(--light-bg);
+      border-radius: 6px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #ddd;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .alert {
+      padding: 12px 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .alert.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .alert.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .alert.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+      font-size: 0.9rem;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+      .patient-info-section {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .patient-info-left {
+        flex-direction: column;
+      }
+
+      .patient-meta {
+        grid-template-columns: 1fr;
+      }
+
+      .patient-actions {
+        justify-content: center;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h2>Q-Now Document Dropbox</h2>
+    <nav>
+      <a href="Q-Now.html">Home</a>
+      <a href="Live_Queue.html">Live Queue</a>
+      <a href="Appointments.html">Appointments</a>
+      <a href="Analytics.html">Analytics</a>
+      <a href="Search.html">Search Database</a>
+      <a href="Dropbox.html">Document Dropbox</a>
+    </nav>
+  </header>
+
+  <div class="container">
+    <div id="corsWarning" style="display:none; background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; padding:12px 15px; border-radius:6px; margin-bottom:15px;">
+      Running from file:// causes uploads to fail due to CORS. Please open this page via http://localhost:5500/.
+    </div>
+    <!-- Patient Information Section -->
+    <div id="patientInfoSection" class="patient-info-section placeholder">
+      <div class="patient-info-left">
+        <div class="patient-avatar">👤</div>
+        <div class="patient-details">
+          <div class="patient-name" id="patientName">Select a patient to begin</div>
+          <div class="patient-meta">
+            <div class="patient-meta-item">
+              <span>📧</span>
+              <span id="patientEmail">-</span>
+            </div>
+            <div class="patient-meta-item">
+              <span>📞</span>
+              <span id="patientPhone">-</span>
+            </div>
+            <div class="patient-meta-item">
+              <span>📍</span>
+              <span id="patientAddress">-</span>
+            </div>
+            <div class="patient-meta-item">
+              <span>🆔</span>
+              <span id="patientUID">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="patient-actions">
+        <a href="Search.html" class="btn-back">← Back to Search</a>
+      </div>
+    </div>
+
+    <h1>Document Management</h1>
+    <p>Upload, manage, and organize medical documents for this patient.</p>
+
+    <div id="alertContainer"></div>
+
+    <!-- Statistics -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-number" id="totalDocuments">0</div>
+        <div class="stat-label">Total Documents</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="totalSize">0 MB</div>
+        <div class="stat-label">Total Size</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="documentTypes">0</div>
+        <div class="stat-label">Document Types</div>
+      </div>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="section-title">Upload Document</div>
+    <div id="uploadNotice" class="placeholder-notice" style="display: none;">
+      ℹ️ Please select a patient from the database search to upload documents.
+    </div>
+    <div id="uploadSection" class="upload-section disabled">
+      <select id="documentType" class="document-type-select" disabled>
+        <option value="">Select Document Type</option>
+        <option value="Consent Form">Consent Form</option>
+        <option value="Medical Bill">Medical Bill</option>
+        <option value="Doctor's Notes">Doctor's Notes</option>
+        <option value="Lab Results">Lab Results</option>
+        <option value="Prescription">Prescription</option>
+        <option value="Medical History">Medical History</option>
+        <option value="Insurance Form">Insurance Form</option>
+        <option value="Other">Other</option>
+      </select>
+      <label for="fileInput" class="upload-label disabled">Choose File</label>
+      <input type="file" id="fileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" disabled />
+      <button id="btnUpload" class="btn" disabled style="margin-left: 10px;">Upload</button>
+      <div class="upload-info">Accepted formats: PDF, DOC, DOCX, JPG, PNG (Max 10 MB)</div>
+      <div id="uploadProgress" class="upload-progress">
+        <div>Uploading: <span id="uploadFileName"></span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-light); margin-top: 6px;">
+          <span id="uploadPercent">0</span>%
+        </div>
+      </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="section-title">Filter & Manage</div>
+    <div class="filter-section">
+      <button class="filter-btn active" data-filter="all" disabled>All</button>
+      <button class="filter-btn" data-filter="Consent Form" disabled>Consent Forms</button>
+      <button class="filter-btn" data-filter="Medical Bill" disabled>Bills</button>
+      <button class="filter-btn" data-filter="Doctor's Notes" disabled>Doctor's Notes</button>
+      <button class="filter-btn" data-filter="Lab Results" disabled>Lab Results</button>
+    </div>
+
+    <!-- Documents Display -->
+    <div class="section-title"> Patient Documents</div>
+    <div id="documentsContainer" class="documents-grid">
+      <div class="no-documents">No patient selected. Documents will appear here once a patient is selected.</div>
+    </div>
+  </div>
+
+  <footer>
+    <p>&copy; 2025 Q-Now. All rights reserved.</p>
+  </footer>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+      authDomain: "q-now-7d98a.firebaseapp.com",
+      databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "q-now-7d98a",
+      storageBucket: "q-now-7d98a.firebasestorage.app",
+      messagingSenderId: "72096271594",
+      appId: "1:72096271594:web:b86777a11af444aac49b93"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+    const storage = firebase.storage();
+    const fs = firebase.firestore();
+    const functionUploadEndpoint = localStorage.getItem("functionUploadEndpoint") || "";
+
+    // UI Elements
+    const noPatientView = document.getElementById("noPatientView");
+    const patientDropboxView = document.getElementById("patientDropboxView");
+    const fileInput = document.getElementById("fileInput");
+    const documentType = document.getElementById("documentType");
+    const documentsContainer = document.getElementById("documentsContainer");
+    const alertContainer = document.getElementById("alertContainer");
+    const uploadProgress = document.getElementById("uploadProgress");
+    const progressFill = document.getElementById("progressFill");
+    const uploadFileName = document.getElementById("uploadFileName");
+    const uploadPercent = document.getElementById("uploadPercent");
+    const totalDocuments = document.getElementById("totalDocuments");
+    const totalSize = document.getElementById("totalSize");
+    const documentTypes = document.getElementById("documentTypes");
+    const btnUpload = document.getElementById("btnUpload");
+
+    const patientName = document.getElementById("patientName");
+    const patientEmail = document.getElementById("patientEmail");
+    const patientPhone = document.getElementById("patientPhone");
+    const patientAddress = document.getElementById("patientAddress");
+    const patientUID = document.getElementById("patientUID");
+    const patientInfoSection = document.getElementById("patientInfoSection");
+    const uploadSection = document.getElementById("uploadSection");
+    const uploadNotice = document.getElementById("uploadNotice");
+    const uploadLabel = document.querySelector(".upload-label");
+
+    let allDocuments = [];
+    let currentFilter = "all";
+    let currentPatientUID = null;
+    let currentPatientData = null;
+    let pendingFile = null;
+
+    // Auth check - initializeDropbox handles loading when patient is selected
+
+    // File input handler - select file, then user picks type and clicks Upload
+    fileInput.addEventListener("change", (e) => {
+      pendingFile = e.target.files[0] || null;
+      btnUpload.disabled = !(pendingFile && (documentType.value || "Other"));
+    });
+    documentType.addEventListener("change", () => {
+      btnUpload.disabled = !(pendingFile && (documentType.value || "Other"));
+    });
+    btnUpload.addEventListener("click", () => {
+      if (!pendingFile) {
+        showAlert("Please choose a file first.", "error");
+        return;
+      }
+      if (pendingFile.size > 10 * 1024 * 1024) {
+        showAlert("File size exceeds 10 MB limit.", "error");
+        return;
+      }
+      const docType = documentType.value || "Other";
+      uploadDocument(pendingFile, docType);
+    });
+
+    // Filter buttons
+    document.querySelectorAll(".filter-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentFilter = btn.dataset.filter;
+        displayDocuments();
+      });
+    });
+
+    // Initialize by checking URL parameters
+    window.addEventListener("load", initializeDropbox);
+
+    function initializeDropbox() {
+      if (location.protocol === "file:") {
+        document.getElementById("corsWarning").style.display = "block";
+      }
+      const urlParams = new URLSearchParams(window.location.search);
+      currentPatientUID = urlParams.get("uid");
+
+      auth.onAuthStateChanged(async (user) => {
+        if (!user) {
+          try {
+            await auth.signInAnonymously();
+          } catch (err) {
+            showAlert("Authentication failed: " + err.message, "error");
+            return;
+          }
+        }
+        if (currentPatientUID) {
+          loadPatientInfo(currentPatientUID);
+          loadDocuments(currentPatientUID);
+        } else {
+          displayPlaceholderState();
+        }
+      });
+    }
+
+    // Display placeholder state when no patient is selected
+    function displayPlaceholderState() {
+      patientInfoSection.classList.add("placeholder");
+      patientName.textContent = "Select a patient to begin";
+      patientEmail.textContent = "-";
+      patientPhone.textContent = "-";
+      patientAddress.textContent = "-";
+      patientUID.textContent = "-";
+
+      uploadSection.classList.add("disabled");
+      uploadNotice.style.display = "block";
+      documentType.disabled = true;
+      fileInput.disabled = true;
+      if (uploadLabel) uploadLabel.classList.add("disabled");
+
+      document.querySelectorAll(".filter-btn").forEach(btn => btn.disabled = true);
+
+      documentsContainer.innerHTML = '<div class="no-documents">No patient selected. Documents will appear here once a patient is selected.</div>';
+      
+      totalDocuments.textContent = "0";
+      totalSize.textContent = "0 MB";
+      documentTypes.textContent = "0";
+    }
+
+    // Load patient information
+    function loadPatientInfo(uid) {
+      db.ref(`patients/${uid}`).once("value").then(snapshot => {
+        if (!snapshot.exists()) {
+          displayPlaceholderState();
+          return;
+        }
+
+        currentPatientData = snapshot.val();
+        patientInfoSection.classList.remove("placeholder");
+        patientName.textContent = currentPatientData.name || "Unknown Patient";
+        patientEmail.textContent = currentPatientData.email || "-";
+        patientPhone.textContent = currentPatientData.contactNumber || "-";
+        patientAddress.textContent = currentPatientData.address || "-";
+        patientUID.textContent = uid;
+
+        uploadSection.classList.remove("disabled");
+        uploadNotice.style.display = "none";
+        documentType.disabled = false;
+        fileInput.disabled = false;
+        btnUpload.disabled = !pendingFile;
+        if (uploadLabel) uploadLabel.classList.remove("disabled");
+
+        document.querySelectorAll(".filter-btn").forEach(btn => btn.disabled = false);
+      });
+    }
+
+    // Upload handler
+    function handleFileUpload(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const docType = documentType.value || "Other";
+      if (!docType) {
+        showAlert("Please select a document type.", "error");
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        showAlert("File size exceeds 10 MB limit.", "error");
+        return;
+      }
+
+      uploadDocument(file, docType);
+    }
+
+    // Upload function
+    function uploadDocument(file, docType) {
+      if (!currentPatientUID) {
+        showAlert("No patient selected.", "error");
+        return;
+      }
+      if (location.protocol === "file:") {
+        showAlert("Uploads blocked when opened as file://. Please use http://localhost:5500/.", "error");
+        return;
+      }
+
+      const fileName = `${Date.now()}_${file.name}`;
+      const storageRef = storage.ref(`documents/${currentPatientUID}/${fileName}`);
+      const metadata = { contentType: file.type || "application/octet-stream" };
+      const uploadTask = storageRef.put(file, metadata);
+
+      uploadProgress.style.display = "block";
+      uploadFileName.textContent = file.name;
+      let lastProgress = 0;
+      const stuckTimer = setTimeout(() => {
+        if (lastProgress === 0) {
+          if (functionUploadEndpoint) {
+            uploadViaFunction(file, currentPatientUID, docType);
+          } else {
+            showAlert("Upload seems stalled at 0%. Set functionUploadEndpoint in localStorage or fix Storage rules.", "error");
+          }
+        }
+      }, 12000);
+
+      uploadTask.on(
+        "state_changed",
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          progressFill.style.width = progress + "%";
+          uploadPercent.textContent = Math.round(progress);
+          lastProgress = progress;
+        },
+        (error) => {
+          showAlert("Upload failed: " + (error.code || "") + " " + error.message, "error");
+          uploadProgress.style.display = "none";
+          clearTimeout(stuckTimer);
+        },
+        () => {
+          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+            const inboxData = {
+              // Mobile InboxItem fields (for patient's inbox in app)
+              sender: "Establishment",
+              fileName: file.name,
+              fileUrl: downloadURL,
+              message: `${file.type && file.type.startsWith("image/") ? "Image" : "Document"}: ${docType}`,
+              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+              type: docType,
+              size: file.size,
+              // Web Dropbox metadata
+              uploadedBy: auth.currentUser ? auth.currentUser.uid : null,
+              patientName: currentPatientData ? (currentPatientData.name || "Unknown") : "Unknown"
+            };
+            fs.collection("patients").doc(currentPatientUID).collection("inbox").add(inboxData).then((docRef) => {
+              showAlert(`✅ ${file.type && file.type.startsWith("image/") ? "Image" : "Document"} "${file.name}" uploaded to patient inbox!`, "success");
+              pendingFile = null;
+              fileInput.value = "";
+              documentType.value = "";
+              btnUpload.disabled = true;
+              uploadProgress.style.display = "none";
+              clearTimeout(stuckTimer);
+            }).catch(err => {
+              showAlert("Error saving document metadata: " + err.message, "error");
+              uploadProgress.style.display = "none";
+              clearTimeout(stuckTimer);
+            });
+          });
+        }
+      );
+    }
+
+    async function uploadViaFunction(file, uid, docType) {
+      try {
+        const form = new FormData();
+        form.append("file", file, file.name);
+        const url = `${functionUploadEndpoint}?uid=${encodeURIComponent(uid)}&type=${encodeURIComponent(docType)}`;
+        const resp = await fetch(url, { method: "POST", body: form });
+        if (!resp.ok) {
+          showAlert("Function upload failed: " + resp.statusText, "error");
+          return;
+        }
+        showAlert(`✅ Document "${file.name}" uploaded via server.`, "success");
+        fileInput.value = "";
+        documentType.value = "";
+        uploadProgress.style.display = "none";
+      } catch (e) {
+        showAlert("Function upload error: " + e.message, "error");
+      }
+    }
+
+    // Load documents for the selected patient (file uploads only - exclude queue notifications)
+    function loadDocuments(patientUid) {
+      if (!patientUid) return;
+      fs.collection("patients").doc(patientUid).collection("inbox").orderBy("timestamp", "desc")
+        .onSnapshot((querySnap) => {
+          allDocuments = [];
+          querySnap.forEach((doc) => {
+            const data = doc.data();
+            // Only include items with fileUrl (document uploads), exclude queue/arrival notifications
+            if (data.fileUrl && data.fileName) {
+              allDocuments.push({ ...data, key: doc.id });
+            }
+          });
+          updateStats();
+          displayDocuments();
+        }, (err) => {
+          showAlert("Error loading documents: " + err.message, "error");
+        });
+    }
+
+    // Display documents
+    function displayDocuments() {
+      documentsContainer.innerHTML = "";
+
+      let filtered = allDocuments;
+      if (currentFilter !== "all") {
+        filtered = allDocuments.filter(doc => doc.type === currentFilter);
+      }
+
+      if (filtered.length === 0) {
+        documentsContainer.innerHTML = `<div class="no-documents">No documents found${currentFilter !== "all" ? " in this category" : ""}. Upload your first document above!</div>`;
+        return;
+      }
+
+      filtered.forEach(doc => {
+        const card = createDocumentCard(doc);
+        documentsContainer.appendChild(card);
+      });
+    }
+
+    // Create document card
+    function createDocumentCard(doc) {
+      const card = document.createElement("div");
+      card.className = "document-card";
+
+      const icon = getFileIcon(doc.fileName);
+      const ts = doc.timestamp;
+      const uploadDate = (ts && (ts.toDate ? ts.toDate() : null)) || (typeof ts === "number" ? new Date(ts) : new Date());
+      const uploadDateStr = uploadDate instanceof Date ? uploadDate.toLocaleDateString("en-PH") : "-";
+      const fileSize = ((doc.size || 0) / 1024).toFixed(2);
+
+      card.innerHTML = `
+        <div class="doc-icon">${icon}</div>
+        <div class="doc-name" title="${doc.fileName || "-"}">${doc.fileName || "-"}</div>
+        <div class="doc-type">${doc.type || "Document"}</div>
+        <div class="doc-meta">
+          <div>📅 ${uploadDateStr}</div>
+          <div>📦 ${fileSize} KB</div>
+        </div>
+        <div class="doc-actions">
+          <a href="${doc.fileUrl}" download="${doc.fileName}" class="btn download">⬇️ Download</a>
+          <button class="btn delete" onclick="deleteDocument('${doc.key}')">🗑️</button>
+        </div>
+      `;
+
+      return card;
+    }
+
+    // Get file icon
+    function getFileIcon(fileName) {
+      const ext = fileName.split(".").pop().toLowerCase();
+      const icons = {
+        pdf: "📄",
+        doc: "📝",
+        docx: "📝",
+        jpg: "🖼️",
+        jpeg: "🖼️",
+        png: "🖼️"
+      };
+      return icons[ext] || "📎";
+    }
+
+    // Delete document
+    window.deleteDocument = function(docKey) {
+      if (!confirm("Are you sure you want to delete this document?")) return;
+
+      if (!currentPatientUID) return;
+
+      fs.collection("patients").doc(currentPatientUID).collection("inbox").doc(docKey).delete()
+        .then(() => {
+          showAlert("✅ Document deleted successfully.", "success");
+        })
+        .catch(err => {
+          showAlert("Error deleting document: " + err.message, "error");
+        });
+    };
+
+    // Update statistics
+    function updateStats() {
+      totalDocuments.textContent = allDocuments.length;
+      const totalSizeBytes = allDocuments.reduce((sum, doc) => sum + doc.size, 0);
+      const totalSizeMB = (totalSizeBytes / (1024 * 1024)).toFixed(2);
+      totalSize.textContent = totalSizeMB + " MB";
+
+      const types = new Set(allDocuments.map(doc => doc.type));
+      documentTypes.textContent = types.size;
+    }
+
+    // Alert function
+    function showAlert(message, type = "info") {
+      const alert = document.createElement("div");
+      alert.className = `alert ${type}`;
+      alert.textContent = message;
+      alertContainer.appendChild(alert);
+
+      setTimeout(() => {
+        alert.remove();
+      }, 5000);
+    }
+  </script>
+</body>
+</html>

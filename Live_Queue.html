@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Q-now | Live Queue Status</title>
+
+  <!-- =========================
+       CSS Styles
+       ========================= -->
+  <style>
+    /* =========================
+       Theme Variables
+       ========================= */
+    :root {
+      --primary: #0077cc;       /* Brand color */
+      --primary-dark: #005fa3;  /* Darker shade for hover effects */
+      --accent: #00aaff;        /* Accent color */
+      --light-bg: #f5f7fa;      /* Page background */
+      --card-bg: #ffffff;        /* Card background */
+      --radius: 10px;            /* Rounded corners */
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.08); /* Card shadow */
+      --text: #333;              /* Primary text color */
+      --text-light: #555;        /* Secondary text */
+      --transition: all 0.25s ease; /* Smooth transitions */
+    }
+
+    /* =========================
+       Global Styles
+       ========================= */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--text);
+      animation: fadeInBody 0.8s ease;
+      padding-top: 65px;
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      animation: slideDown 0.6s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      flex: 0 0 auto;
+    }
+
+    nav {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+      align-items: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    nav a:hover {
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+    /* Notifications */
+    .notif-container{ position:relative; margin-left:6px; }
+    .notif-bell{ cursor:pointer; position:relative; display:inline-flex; align-items:center; gap:6px; color:#fff; font-weight:500; }
+    .notif-badge{ position:absolute; top:-6px; right:-8px; background:#ff3b30; color:#fff; border-radius:10px; padding:0 6px; font-size:0.7rem; display:none; }
+    .notif-panel{ position:absolute; right:0; top:28px; width:320px; max-height:360px; overflow:auto; background:#fff; color:#333; border:1px solid #ddd; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.15); display:none; z-index:1200; }
+    .notif-item{ padding:10px 12px; border-bottom:1px solid #eee; cursor:pointer; transition:background 0.2s, opacity 0.2s; }
+    .notif-item.unread{ background:#f5faff; }
+    .notif-item.read{ opacity:0.75; }
+    .notif-item.new-open{ background:#e6f0ff; }
+    .notif-item:last-child{ border-bottom:none; }
+    .notif-title{ font-weight:600; font-size:0.9rem; }
+    .notif-meta{ font-size:0.8rem; color:#666; }
+
+    main {
+      max-width: 1000px;
+      margin: 30px auto;
+      padding: 25px;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(15px);
+      animation: fadeUp 0.8s ease forwards;
+    }
+
+    h2 {
+      color: var(--primary-dark);
+      margin-bottom: 1rem;
+    }
+
+    #queuesList {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .queue-item {
+      background: white;
+      border-radius: var(--radius);
+      padding: 1rem 1.2rem;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(10px);
+      animation: fadeUp 0.7s ease forwards;
+    }
+
+    .queue-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+      background: #f0f8ff;
+    }
+
+    .queue-item b {
+      font-size: 1.05rem;
+      color: var(--primary-dark);
+    }
+
+    .status-open {
+      color: #28a745;
+      font-weight: bold;
+    }
+
+    .status-closed {
+      color: #dc3545;
+      font-weight: bold;
+    }
+
+    .small {
+      font-size: 0.9rem;
+      color: var(--text-light);
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      margin-top: 40px;
+      background: #eef3f8;
+      color: #666;
+      font-size: 0.9rem;
+      animation: fadeInBody 1.2s ease;
+    }
+
+    /* =========================
+       Animations
+       ========================= */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInBody {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    /* Requests preview buttons */
+    .rq-actions{ margin-top:8px; display:flex; gap:8px; }
+    .btn-small{ border:none; padding:6px 10px; border-radius:8px; cursor:pointer; font-weight:600; }
+    .btn-accept{ background:#28a745; color:#fff; }
+    .btn-reject{ background:#dc3545; color:#fff; }
+    .rq-item{ background:#f9fbff; border:1px solid #e0e7ef; border-radius:8px; padding:8px 10px; margin-top:8px; }
+  </style>
+</head>
+
+<body>
+  <!-- =========================
+       Header
+       ========================= -->
+  <header>
+    <h1>Live Queue Status</h1>
+    <nav>
+      <a href="Q-Now.html">Home</a>
+      <a href="Appointments.html">Appointments</a>
+      <a href="Analytics.html">Analytics</a>
+      <a href="Search.html">Search Database</a>
+      <div class="notif-container" id="notifContainer">
+        <span class="notif-bell" id="notifBell" title="Notifications">🔔
+          <span class="notif-badge" id="notifBadge">0</span>
+        </span>
+        <div class="notif-panel" id="notifPanel">
+          <div class="notif-item"><span class="notif-meta">No notifications yet</span></div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- =========================
+       Main Section: List of Queues
+       ========================= -->
+  <main>
+    <section>
+      <h2>My Establishments & Counters</h2>
+      <div id="queuesList">
+        <!-- Placeholder text while loading queues -->
+        <p>Loading active queues...</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================
+       Footer
+       ========================= -->
+  <footer>
+    <p>&copy; 2025 Q-now. All rights reserved.</p>
+  </footer>
+
+  <!-- =========================
+       Firebase SDK (Compat) for Realtime Database & Auth
+       ========================= -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+
+  <script>
+    // =========================
+    // Firebase configuration
+    // =========================
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+      authDomain: "q-now-7d98a.firebaseapp.com",
+      databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "q-now-7d98a",
+      storageBucket: "q-now-7d98a.firebasestorage.app",
+      messagingSenderId: "72096271594",
+      appId: "1:72096271594:web:b86777a11af444aac49b93"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    // Notifications (Compat)
+    const notifBell = document.getElementById("notifBell");
+    const notifPanel = document.getElementById("notifPanel");
+    const notifBadge = document.getElementById("notifBadge");
+    let notifications = [];
+    const READ_STORAGE_KEY = "qnow_notif_read";
+    let readKeys = {};
+    try{ readKeys = JSON.parse(localStorage.getItem(READ_STORAGE_KEY)||"{}"); }catch(_){ readKeys={}; }
+    const seen = { resched:new Set(), cancel:new Set(), queue:new Set(), arrival:new Set(), due:new Set() };
+    const estNameCache = {}; const patientNameCache = {};
+    notifBell?.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      const opening = !(notifPanel.style.display==="block");
+      notifPanel.style.display = opening ? "block" : "none";
+      if(opening){
+        window.__justReadKeys = new Set();
+        notifications.forEach(n=>{ const k=(n && n.key) ? [n.type||"",n.estId||"",n.counterId||"",n.key].join("|") : [n.type||"",n.estId||"",n.counterId||"",n.title||"",n.meta||""].join("|"); if(!readKeys[k]) __justReadKeys.add(k); readKeys[k]=true; n.read=true; });
+        localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys));
+        updateNotifUI();
+      }
+    });
+    document.addEventListener("click", ()=>{ if(notifPanel){ notifPanel.style.display="none"; window.__justReadKeys = new Set(); updateNotifUI(); } });
+    document.addEventListener("click", ()=>{ if(notifPanel) notifPanel.style.display="none"; });
+    function resolveEstName(estId, cb){
+      if(estNameCache[estId]) return cb(estNameCache[estId]);
+      db.ref(`establishments/${estId}/companyName`).once("value").then(s=>{ if(s.exists()){ estNameCache[estId]=s.val(); cb(s.val()); } else { db.ref(`establishments/${estId}/name`).once("value").then(s2=>{ const nm=s2.exists()?s2.val():"Establishment"; estNameCache[estId]=nm; cb(nm); }); } });
+    }
+    function resolvePatientName(uid, cb){
+      if(patientNameCache[uid]) return cb(patientNameCache[uid]);
+      db.ref(`patients/${uid}/name`).once("value").then(s=>{ const nm=s.exists()?s.val():"Patient"; patientNameCache[uid]=nm; cb(nm); });
+    }
+    function updateNotifUI(){
+      function notifKey(n){ if(n && n.key) return [n.type||"",n.estId||"",n.counterId||"",n.key].join("|"); return [n.type||"",n.estId||"",n.counterId||"",n.title||"",n.meta||""].join("|"); }
+      notifications.forEach(n=>{ const k=notifKey(n); if(readKeys[k]) n.read=true; });
+      const sorted = notifications.slice().sort((a,b)=> (b.ts||0) - (a.ts||0));
+      const list = sorted.slice(0,50);
+      notifPanel.innerHTML = list.length ? list.map((n,i)=>{ const k=notifKey(n); const cls = n.read ? (window.__justReadKeys && __justReadKeys.has && __justReadKeys.has(k) ? "new-open" : "read") : "unread"; return `<div class="notif-item ${cls}" data-idx="${i}" data-type="${n.type||''}" data-est="${n.estId||''}" data-counter="${n.counterId||''}"><div class="notif-title">${n.title}</div><div class="notif-meta">${n.meta}</div><div>${n.msg}</div></div>`; }).join("") : `<div class="notif-item"><span class="notif-meta">No notifications</span></div>`;
+      const unread = notifications.filter(n=>!n.read).length;
+      notifBadge.textContent = String(unread);
+      notifBadge.style.display = unread ? "inline-block" : "none";
+      notifPanel.querySelectorAll(".notif-item[data-idx]").forEach(el=>{
+        el.addEventListener("click", ()=>{
+          const idx = Number(el.getAttribute("data-idx"));
+          const itm = notifications[idx];
+          if(itm){ const k=[itm.type||"",itm.estId||"",itm.counterId||"",itm.msg||"",itm.ts||""].join("|"); readKeys[k]=true; localStorage.setItem(READ_STORAGE_KEY, JSON.stringify(readKeys)); itm.read=true; updateNotifUI(); }
+          const t = el.getAttribute("data-type")||"";
+          const estId = el.getAttribute("data-est")||"";
+          const counterId = el.getAttribute("data-counter")||"";
+          if(t==="queue"||t==="arrival"){
+            if(estId&&counterId) window.location.href=`Counter.html?estId=${encodeURIComponent(estId)}&counterId=${encodeURIComponent(counterId)}`;
+            else window.location.href = "Live_Queue.html";
+          } else {
+            window.location.href = "Appointments.html";
+          }
+        });
+      });
+    }
+    function startNotifForEst(estId){
+      db.ref(`establishments/${estId}/rescheduleRequests`).on("value", snap=>{
+        snap.forEach(rs=>{
+          const v=rs.val(); const key=`${estId}|resched|${rs.key}`;
+          if(v && v.status==="pending" && !seen.resched.has(key)){
+            seen.resched.add(key);
+            const item={type:"reschedule", estId, title:"Appointment Reschedule", meta:"Loading...", msg:"Reschedule requested", ts:Date.now()};
+            notifications.unshift(item);
+            resolveEstName(estId, n=>{ item.meta=n; updateNotifUI(); });
+            db.ref(`establishments/${estId}/appointments/${rs.key}`).once("value").then(ap=>{
+              if(ap.exists()){ const a=ap.val(); const pid=a?.patientId; const pn=a?.patientName; if(pn){ item.msg=`Reschedule requested by ${pn}`; updateNotifUI(); } else if(pid){ resolvePatientName(pid,n=>{ item.msg=`Reschedule requested by ${n}`; updateNotifUI(); }); } }
+            });
+          }
+        }); updateNotifUI();
+      });
+      db.ref(`establishments/${estId}/appointments`).on("value", snap=>{
+        snap.forEach(as=>{ const a=as.val(); if(a && a.status==="cancelled" && a.cancelledAt){ const key=`${estId}|cancel|${as.key}`; if(!seen.cancel.has(key)){ seen.cancel.add(key); const item={type:"cancel", estId, title:"Appointment Cancelled", meta:`${a.patientName||"Patient"}`, msg:`${a.service||"-"}`, ts:a.cancelledAt}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=`${a.patientName||"Patient"} — ${n}`; updateNotifUI(); }); } } }); updateNotifUI();
+      });
+      db.ref(`establishments/${estId}/counters`).on("value", snap=>{
+        snap.forEach(cSnap=>{ const counterId=cSnap.key; const counterName=(cSnap.val()&&cSnap.val().name)||counterId; const reqSnap=cSnap.child("requests"); if(!reqSnap.exists()) return; reqSnap.forEach(r=>{ const req=r.val(); if(req && req.status==="pending"){ const key=`${estId}|queue|${counterId}|${r.key}`; if(!seen.queue.has(key)){ seen.queue.add(key); const pname=req.patientName || "Unknown"; const item={type:"queue", estId, counterId, title:"Queue Request", meta:`${counterName}`, msg:`From ${pname}`, ts:req.createdAt||Date.now()}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=`${n} — ${counterName}`; updateNotifUI(); }); } } }); }); updateNotifUI();
+      });
+      db.ref(`establishments/${estId}/arrivals`).on("value", snap=>{
+        snap.forEach(a=>{ const v=a.val(); const key=`${estId}|arrival|${a.key}`; if(v && !seen.arrival.has(key)){ seen.arrival.add(key); const item={type:"arrival", estId, title:"Patient Arrived", meta:"Loading...", msg:"Arrival verified", ts:v.timestamp||Date.now()}; notifications.unshift(item); resolveEstName(estId, n=>{ item.meta=n; updateNotifUI(); }); if(v.uid){ resolvePatientName(v.uid, n=>{ item.msg=`${n} has arrived`; updateNotifUI(); }); } } }); updateNotifUI();
+      });
+    }
+
+    // Reference to the DOM element for displaying queues
+    const queuesList = document.getElementById("queuesList");
+
+    // =========================
+    // Listen for authentication changes
+    // =========================
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        // User not logged in
+        queuesList.innerHTML = "<p>Please log in first.</p>";
+        return;
+      }
+
+      // Listen for all establishments in database
+      db.ref("establishments").on("value", snapshot => {
+        queuesList.innerHTML = ""; // Clear previous content
+        notifications = [];
+        // Start notifications for owned establishments
+        if (snapshot.exists()) {
+          snapshot.forEach(estSnap=>{
+            const estData = estSnap.val();
+            const estId = estSnap.key;
+            if ((estData.ownerId || estData.uid || estData.createdBy) === user.uid) {
+              startNotifForEst(estId);
+            }
+          });
+        }
+
+        if (!snapshot.exists()) {
+          queuesList.innerHTML = "<p>No establishments yet.</p>";
+          return;
+        }
+
+        // Loop through each establishment
+        snapshot.forEach(estSnap => {
+          const estData = estSnap.val();
+          const estId = estSnap.key;
+
+          // Only show establishments owned by current user
+          if (estData.ownerId !== user.uid) return;
+
+          const estName = estData.companyName || estData.name || "Unnamed Establishment";
+
+          // Loop through counters if they exist
+          if (estData.counters) {
+            Object.entries(estData.counters).forEach(([counterId, counter]) => {
+              const counterName = counter.name || "Unnamed Counter";
+              const accepting = !!counter.accepting;
+
+              let serving = null;
+              let waitingCount = 0;
+
+              // Count serving and waiting customers
+              if (counter.queue) {
+                Object.values(counter.queue).forEach(entry => {
+                  if (entry.status === "in_service") serving = entry;
+                  if (entry.status === "waiting") waitingCount++;
+                });
+              }
+
+              // Create a DOM element for this counter
+              const div = document.createElement("div");
+              div.className = "queue-item";
+
+              let statusHtml = accepting
+                ? `<span class="status-open">OPEN</span>`
+                : `<span class="status-closed">CLOSED</span>`;
+
+              let servingHtml = "";
+              if (serving) {
+                servingHtml = `<br><span class="small">In Service: ${serving.patientName || "Unknown"} (${serving.age || "?"} y/o)</span>`;
+              } else {
+                servingHtml = `<br><span class="small">Waiting: ${waitingCount} in queue</span>`;
+              }
+
+              div.innerHTML = `
+                <b>${estName} - ${counterName}</b><br>
+                Status: ${statusHtml}
+                ${servingHtml}
+              `;
+              // Requests preview container
+              const reqs = document.createElement("div");
+              reqs.className = "requests-preview";
+              div.appendChild(reqs);
+              // Render top pending requests with Accept/Reject
+              renderRequestsPreview(estId, counterId, estName, counterName, reqs);
+              // Make each counter clickable to go to its detail page
+              div.onclick = () => {
+                window.location.href = `Counter.html?estId=${estId}&counterId=${counterId}`;
+              };
+
+              queuesList.appendChild(div);
+            });
+          }
+        });
+      });
+    });
+    
+    // Render pending requests preview with accept/reject controls
+    function renderRequestsPreview(estId, counterId, estName, counterName, container){
+      firebase.database().ref(`establishments/${estId}/counters/${counterId}/requests`).once("value").then(snap=>{
+        container.innerHTML = "";
+        let added = 0;
+        snap.forEach(reqSnap=>{
+          const req = reqSnap.val();
+          const reqId = reqSnap.key;
+          if(req && req.status === "pending" && added < 3){
+            added++;
+            const el = document.createElement("div");
+            el.className = "rq-item";
+            el.innerHTML = `<div><b>${req.patientName||"Unknown"}</b> — <span class="small">Reason: ${req.reason||"-"}</span></div>`;
+            const actions = document.createElement("div");
+            actions.className = "rq-actions";
+            const a = document.createElement("button"); a.className="btn-small btn-accept"; a.textContent="Accept";
+            const r = document.createElement("button"); r.className="btn-small btn-reject"; r.textContent="Reject";
+            actions.appendChild(a); actions.appendChild(r);
+            el.appendChild(actions);
+            // Stop click bubbling to parent that navigates
+            el.addEventListener("click", (e)=> e.stopPropagation());
+            a.addEventListener("click", (e)=>{ e.stopPropagation(); acceptRequest(estId, counterId, estName, counterName, reqId, req, container); });
+            r.addEventListener("click", (e)=>{ e.stopPropagation(); rejectRequest(estId, counterId, estName, counterName, reqId, req, container); });
+            container.appendChild(el);
+          }
+        });
+        if(added===0){
+          container.innerHTML = `<div class="small" style="margin-top:6px;color:#666;">No pending requests</div>`;
+        }
+      });
+    }
+    async function acceptRequest(estId, counterId, estName, counterName, reqId, reqData, container){
+      const db = firebase.database();
+      const now = Date.now();
+      const updates = {};
+      updates[`establishments/${estId}/counters/${counterId}/requests/${reqId}/status`] = "accepted";
+      updates[`establishments/${estId}/counters/${counterId}/requests/${reqId}/acceptedAt`] = now;
+      let hasActive = false; let currentOrder = 0;
+      if (reqData.uid){
+        try{
+          const ai = await db.ref(`arrivalIndex/${reqData.uid}`).once("value");
+          if(ai.exists()){ hasActive = true; currentOrder = ai.val().chainOrder || 0; }
+        }catch(_){}
+      }
+      if(reqData.uid){
+        const chainOrder = hasActive ? currentOrder + 1 : 0;
+        updates[`patients/${reqData.uid}/queueRequests/${reqId}`] = {
+          status: "accepted",
+          estId, estName, counterId, counterName,
+          reason: reqData.reason || null,
+          chainOrder,
+          acceptedAt: now
+        };
+        if(!hasActive){
+          updates[`arrivalIndex/${reqData.uid}`] = {
+            uid: reqData.uid,
+            counterId, estId, requestKey: reqId,
+            chainOrder: 0,
+            status: "awaiting_arrival",
+            createdAt: now
+          };
+        }
+      }
+      await db.ref().update(updates);
+      renderRequestsPreview(estId, counterId, estName, counterName, container);
+    }
+    async function rejectRequest(estId, counterId, estName, counterName, reqId, reqData, container){
+      const db = firebase.database();
+      const now = Date.now();
+      const updates = {};
+      updates[`establishments/${estId}/counters/${counterId}/requests/${reqId}/status`] = "rejected";
+      if (reqData.uid){
+        updates[`patients/${reqData.uid}/queueStatus`] = {
+          status:"rejected", estId, counterId, timestamp: now
+        };
+        const reqKey = reqData.requestKey || reqId;
+        updates[`patients/${reqData.uid}/queueRequests/${reqKey}/status`] = "rejected";
+      }
+      await db.ref().update(updates);
+      renderRequestsPreview(estId, counterId, estName, counterName, container);
+    }
+  </script>
+</body>
+</html>

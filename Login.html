@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Q-now | Login</title>
+
+  <style>
+    :root {
+      --primary: #0077cc;
+      --primary-dark: #005fa3;
+      --light-bg: #f5f7fa;
+      --card-bg: #fff;
+      --radius: 10px;
+      --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --text: #333;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      animation: fadeIn 0.8s ease;
+    }
+
+    .login-container {
+      background: var(--card-bg);
+      padding: 2.5rem 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 360px;
+      text-align: center;
+      animation: slideUp 0.8s ease;
+      position: relative;
+    }
+
+    h2 {
+      color: var(--primary-dark);
+      margin-bottom: 1.5rem;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      margin: 0.6rem 0;
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      transition: 0.3s;
+      box-sizing: border-box;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.15);
+    }
+
+    .show-password {
+      display: block;
+      margin-top: 0.4rem;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 1rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius);
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .switch {
+      margin-top: 1.2rem;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    .switch a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+
+    .switch a:hover {
+      color: var(--primary-dark);
+    }
+
+    #errorMsg {
+      color: red;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      min-height: 18px;
+    }
+
+    footer {
+      position: absolute;
+      bottom: 10px;
+      font-size: 0.8rem;
+      color: #777;
+      text-align: center;
+      width: 100%;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2 id="formTitle">Login</h2>
+
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <label class="show-password">
+      <input type="checkbox" onclick="togglePassword()"> Show Password
+    </label>
+
+    <button class="btn" onclick="loginUser()">Login</button>
+    <button class="btn" onclick="registerUser()" style="display:none;" id="signupBtn">Sign Up</button>
+
+    <div id="errorMsg"></div>
+
+    <div class="switch">
+      <span id="switchText">
+        Don’t have an account? <a href="#" onclick="toggleForm()">Sign Up</a>
+      </span>
+    </div>
+  </div>
+
+  <footer>
+    © 2025 Q-now. All rights reserved.
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+      authDomain: "q-now-7d98a.firebaseapp.com",
+      databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "q-now-7d98a",
+      storageBucket: "q-now-7d98a.firebasestorage.app",
+      messagingSenderId: "72096271594",
+      appId: "1:72096271594:web:b86777a11af444aac49b93",
+      measurementId: "G-WCHTXCD18T"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const auth = getAuth(app);
+
+    const errorMsg = document.getElementById("errorMsg");
+
+    window.loginUser = async function () {
+      errorMsg.innerText = "";
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        errorMsg.innerText = "⚠️ Please enter both email and password";
+        return;
+      }
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        alert("✅ Logged in as: " + userCredential.user.email);
+        setTimeout(() => window.location.href = "Q-Now.html", 500);
+      } catch (error) {
+        errorMsg.innerText = "⚠️ " + error.message;
+      }
+    };
+
+    window.registerUser = async function () {
+      errorMsg.innerText = "";
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      if (!email || !password) {
+        errorMsg.innerText = "⚠️ Please enter both email and password";
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        await set(ref(database, "users/" + user.uid), {
+          email: user.email,
+          uid: user.uid,
+          signupDate: new Date().toISOString()
+        });
+
+        alert("✅ Account created for: " + user.email);
+        setTimeout(() => window.location.href = "Q-Now.html", 500);
+      } catch (error) {
+        errorMsg.innerText = "⚠️ " + error.message;
+      }
+    };
+
+    window.toggleForm = function () {
+      const formTitle = document.getElementById("formTitle");
+      const loginBtn = document.querySelector("button[onclick='loginUser()']");
+      const signupBtn = document.getElementById("signupBtn");
+      const switchText = document.getElementById("switchText");
+      errorMsg.innerText = "";
+
+      if (formTitle.innerText === "Login") {
+        formTitle.innerText = "Sign Up";
+        loginBtn.style.display = "none";
+        signupBtn.style.display = "block";
+        switchText.innerHTML = 'Already have an account? <a href="#" onclick="toggleForm()">Login</a>';
+      } else {
+        formTitle.innerText = "Login";
+        loginBtn.style.display = "block";
+        signupBtn.style.display = "none";
+        switchText.innerHTML = 'Don’t have an account? <a href="#" onclick="toggleForm()">Sign Up</a>';
+      }
+    };
+
+    window.togglePassword = function () {
+      const pwd = document.getElementById("password");
+      pwd.type = pwd.type === "password" ? "text" : "password";
+    };
+
+    // Autofocus email field on load
+    document.getElementById("email").focus();
+  </script>
+</body>
+</html>

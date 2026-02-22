@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Q-now | Edit Counter</title>
+
+  <style>
+    /* =========================
+       Theme Variables
+       ========================= */
+    :root {
+      --primary: #0077cc;
+      --primary-dark: #005fa3;
+      --accent: #00aaff;
+      --light-bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --radius: 10px;
+      --shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+      --text: #333;
+      --text-light: #555;
+    }
+
+    /* =========================
+       Global Styles
+       ========================= */
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--light-bg);
+      color: var(--text);
+      animation: fadeIn 0.6s ease;
+      padding-top: 65px;
+    }
+
+    /* Header */
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      width: 100%;
+      box-sizing: border-box;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.4rem;
+      flex: 0 0 auto;
+    }
+
+    header nav {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      flex: 1 1 auto;
+    }
+
+    header nav a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: 0.3s;
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    header nav a:hover {
+      color: var(--accent);
+    }
+
+    /* Main content */
+    main {
+      max-width: 900px;
+      margin: 30px auto;
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      animation: slideUp 0.8s ease;
+    }
+
+    h2 {
+      color: var(--primary-dark);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+
+    /* Form */
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-weight: 600;
+      margin: 0.8rem 0 0.3rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="text"], textarea {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    input[type="text"]:focus, textarea:focus {
+      border-color: var(--primary);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(0,119,204,0.15);
+    }
+
+    /* Toggle switch for priority lane */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+      margin-left: 10px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: 0.3s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--primary);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      margin-top: 1rem;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    .back-link {
+      display: inline-block;
+      text-decoration: none;
+      color: var(--primary);
+      margin-top: 1.5rem;
+      font-weight: 500;
+      transition: 0.3s;
+    }
+
+    .back-link:hover {
+      color: var(--primary-dark);
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: #eef3f8;
+      color: #666;
+      font-size: 0.9rem;
+      margin-top: 40px;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- =========================
+       Header
+       ========================= -->
+  <header>
+    <h1>Q-now</h1>
+    <nav>
+      <a href="Q-Now.html">Home</a>
+    </nav>
+  </header>
+
+  <!-- =========================
+       Main Section
+       ========================= -->
+  <main>
+    <h2>Edit Counter</h2>
+
+    <!-- =========================
+         Form for Editing Counter
+         ========================= -->
+    <form id="counterForm">
+      <!-- Counter Name -->
+      <label for="counter-name">Counter Name</label>
+      <input type="text" id="counter-name" required />
+
+      <!-- Counter Location -->
+      <label for="counter-location">Counter Location Description</label>
+      <textarea id="counter-location" rows="2" placeholder="e.g. Ground Floor - Near Main Entrance"></textarea>
+
+      <!-- Priority Lane Toggle -->
+      <label for="priority-lane">
+        Enable Priority Lane
+        <div class="toggle-switch">
+          <input type="checkbox" id="priority-lane" />
+          <span class="slider"></span>
+        </div>
+      </label>
+
+      <!-- Submit Button -->
+      <button type="submit">Save Counter Information</button>
+    </form>
+
+    <!-- Back Link -->
+    <a href="Establishment.html" class="back-link">← Back to Establishment</a>
+  </main>
+
+  <!-- =========================
+       Footer
+       ========================= -->
+  <footer>
+    <p>© 2025 Q-now. All rights reserved.</p>
+  </footer>
+
+  <!-- =========================
+       Firebase Script
+       ========================= -->
+  <script type="module">
+    // Import necessary Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+
+    // =========================
+    // Firebase configuration
+    // =========================
+    const firebaseConfig = {
+      apiKey: "AIzaSyA-VDEzKeVVpOwE7rds6ofNsKvxK3mWIlE",
+      authDomain: "q-now-7d98a.firebaseapp.com",
+      databaseURL: "https://q-now-7d98a-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "q-now-7d98a",
+      storageBucket: "q-now-7d98a.firebasestorage.app",
+      messagingSenderId: "72096271594",
+      appId: "1:72096271594:web:b86777a11af444aac49b93"
+    };
+
+    // Initialize Firebase app
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+
+    // Reference the form
+    const form = document.getElementById("counterForm");
+
+    // Get parameters from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const estId = urlParams.get("estId");
+    const counterId = urlParams.get("counterId");
+
+    if (!estId || !counterId) {
+      alert("Invalid establishment or counter ID.");
+      window.location.href = "Q-Now.html";
+    }
+
+    // =========================
+    // Load counter data when auth state is ready
+    // =========================
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        alert("You must be logged in to edit a counter.");
+        window.location.href = "Login.html";
+        return;
+      }
+
+      try {
+        const counterRef = ref(db, `establishments/${estId}/counters/${counterId}`);
+        const estRef = ref(db, `establishments/${estId}`);
+
+        // Verify ownership
+        const estSnapshot = await get(estRef);
+        if (!estSnapshot.exists()) {
+          alert("Establishment not found.");
+          window.location.href = "Q-Now.html";
+          return;
+        }
+
+        const est = estSnapshot.val();
+        if (est.ownerId !== user.uid) {
+          alert("You do not have permission to edit this counter.");
+          window.location.href = "Q-Now.html";
+          return;
+        }
+
+        // Load counter data
+        const counterSnapshot = await get(counterRef);
+        if (!counterSnapshot.exists()) {
+          alert("Counter not found.");
+          window.location.href = "Establishment.html?id=" + estId;
+          return;
+        }
+
+        const counter = counterSnapshot.val();
+
+        // Populate form with existing data
+        document.getElementById("counter-name").value = counter.name || "";
+        document.getElementById("counter-location").value = counter.location || "";
+        document.getElementById("priority-lane").checked = counter.priorityLane || false;
+      } catch (error) {
+        alert("Error loading counter: " + error.message);
+      }
+    });
+
+    // =========================
+    // Form submission event for updating
+    // =========================
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const user = auth.currentUser;
+      if (!user) {
+        alert("You must be logged in to update a counter.");
+        return;
+      }
+
+      // Collect updated counter data
+      const updatedData = {
+        name: document.getElementById("counter-name").value,
+        location: document.getElementById("counter-location").value,
+        priorityLane: document.getElementById("priority-lane").checked
+      };
+
+      try {
+        const counterRef = ref(db, `establishments/${estId}/counters/${counterId}`);
+        const counterSnapshot = await get(counterRef);
+
+        if (!counterSnapshot.exists()) {
+          alert("Counter not found.");
+          return;
+        }
+
+        // Merge with existing data to preserve other fields
+        const existingData = counterSnapshot.val();
+        const mergedData = { ...existingData, ...updatedData };
+
+        await set(counterRef, mergedData);
+        alert("✅ Counter updated successfully!");
+        window.location.href = `Establishment.html?id=${estId}`;
+      } catch (error) {
+        alert("❌ Error updating counter: " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>
