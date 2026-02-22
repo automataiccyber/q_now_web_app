@@ -695,6 +695,8 @@
     const storage = firebase.storage();
     const fs = firebase.firestore();
     const functionUploadEndpoint = localStorage.getItem("functionUploadEndpoint") || "";
+    const isVercelHost = (location.hostname.endsWith(".vercel.app") || location.hostname.includes("-git-"));
+    const inlineUploadMode = (localStorage.getItem("inlineUploadMode") === "1") || isVercelHost;
 
     // UI Elements
     const noPatientView = document.getElementById("noPatientView");
@@ -870,6 +872,12 @@
         return;
       }
 
+      const storageBucketOpt = (firebase.app() && firebase.app().options && firebase.app().options.storageBucket) || "";
+      if (inlineUploadMode || (!functionUploadEndpoint && !storageBucketOpt)) {
+        fallbackBase64Upload(file, docType);
+        return;
+      }
+
       const fileName = `${Date.now()}_${file.name}`;
       const storageRef = storage.ref(`documents/${currentPatientUID}/${fileName}`);
       const metadata = { contentType: file.type || "application/octet-stream" };
@@ -880,13 +888,9 @@
       let lastProgress = 0;
       const stuckTimer = setTimeout(() => {
         if (lastProgress === 0) {
-          if (functionUploadEndpoint) {
-            uploadViaFunction(file, currentPatientUID, docType);
-          } else {
-            showAlert("Upload seems stalled at 0%. Set functionUploadEndpoint in localStorage or fix Storage rules.", "error");
-          }
+          fallbackBase64Upload(file, docType);
         }
-      }, 12000);
+      }, 3000);
 
       uploadTask.on(
         "state_changed",
@@ -897,9 +901,7 @@
           lastProgress = progress;
         },
         (error) => {
-          showAlert("Upload failed: " + (error.code || "") + " " + error.message, "error");
-          uploadProgress.style.display = "none";
-          clearTimeout(stuckTimer);
+          fallbackBase64Upload(file, docType);
         },
         () => {
           uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
@@ -932,6 +934,45 @@
           });
         }
       );
+    }
+
+    function fallbackBase64Upload(file, docType) {
+      if (file.size > 900 * 1024) {
+        showAlert("File too large for inline upload. Enable Storage.", "error");
+        uploadProgress.style.display = "none";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = reader.result;
+        const inboxData = {
+          sender: "Establishment",
+          fileName: file.name,
+          fileUrl: dataUrl,
+          message: `${file.type && file.type.startsWith("image/") ? "Image" : "Document"}: ${docType}`,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+          type: docType,
+          size: file.size,
+          uploadedBy: auth.currentUser ? auth.currentUser.uid : null,
+          patientName: currentPatientData ? (currentPatientData.name || "Unknown") : "Unknown"
+        };
+        fs.collection("patients").doc(currentPatientUID).collection("inbox").add(inboxData).then(() => {
+          showAlert(`✅ ${file.type && file.type.startsWith("image/") ? "Image" : "Document"} "${file.name}" added to patient inbox.`, "success");
+          pendingFile = null;
+          fileInput.value = "";
+          documentType.value = "";
+          btnUpload.disabled = true;
+          uploadProgress.style.display = "none";
+        }).catch(err => {
+          showAlert("Error saving document: " + err.message, "error");
+          uploadProgress.style.display = "none";
+        });
+      };
+      reader.onerror = () => {
+        showAlert("Failed to read file.", "error");
+        uploadProgress.style.display = "none";
+      };
+      reader.readAsDataURL(file);
     }
 
     async function uploadViaFunction(file, uid, docType) {
