@@ -872,68 +872,9 @@
         return;
       }
 
-      const storageBucketOpt = (firebase.app() && firebase.app().options && firebase.app().options.storageBucket) || "";
-      if (inlineUploadMode || (!functionUploadEndpoint && !storageBucketOpt)) {
-        fallbackBase64Upload(file, docType);
-        return;
-      }
+      fallbackBase64Upload(file, docType);
+      return;
 
-      const fileName = `${Date.now()}_${file.name}`;
-      const storageRef = storage.ref(`documents/${currentPatientUID}/${fileName}`);
-      const metadata = { contentType: file.type || "application/octet-stream" };
-      const uploadTask = storageRef.put(file, metadata);
-
-      uploadProgress.style.display = "block";
-      uploadFileName.textContent = file.name;
-      let lastProgress = 0;
-      const stuckTimer = setTimeout(() => {
-        if (lastProgress === 0) {
-          fallbackBase64Upload(file, docType);
-        }
-      }, 3000);
-
-      uploadTask.on(
-        "state_changed",
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          progressFill.style.width = progress + "%";
-          uploadPercent.textContent = Math.round(progress);
-          lastProgress = progress;
-        },
-        (error) => {
-          fallbackBase64Upload(file, docType);
-        },
-        () => {
-          uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
-            const inboxData = {
-              // Mobile InboxItem fields (for patient's inbox in app)
-              sender: "Establishment",
-              fileName: file.name,
-              fileUrl: downloadURL,
-              message: `${file.type && file.type.startsWith("image/") ? "Image" : "Document"}: ${docType}`,
-              timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-              type: docType,
-              size: file.size,
-              // Web Dropbox metadata
-              uploadedBy: auth.currentUser ? auth.currentUser.uid : null,
-              patientName: currentPatientData ? (currentPatientData.name || "Unknown") : "Unknown"
-            };
-            fs.collection("patients").doc(currentPatientUID).collection("inbox").add(inboxData).then((docRef) => {
-              showAlert(`✅ ${file.type && file.type.startsWith("image/") ? "Image" : "Document"} "${file.name}" uploaded to patient inbox!`, "success");
-              pendingFile = null;
-              fileInput.value = "";
-              documentType.value = "";
-              btnUpload.disabled = true;
-              uploadProgress.style.display = "none";
-              clearTimeout(stuckTimer);
-            }).catch(err => {
-              showAlert("Error saving document metadata: " + err.message, "error");
-              uploadProgress.style.display = "none";
-              clearTimeout(stuckTimer);
-            });
-          });
-        }
-      );
     }
 
     function fallbackBase64Upload(file, docType) {
